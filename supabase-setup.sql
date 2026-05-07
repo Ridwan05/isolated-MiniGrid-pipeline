@@ -10,6 +10,7 @@ drop table if exists public.projects cascade;
 drop table if exists public.team_members cascade;
 drop table if exists public.issues cascade;
 drop table if exists public.deployment_sites cascade;
+drop table if exists public.tasks cascade;
 
 create table public.projects (
   id bigint primary key,
@@ -70,6 +71,44 @@ create table public.deployment_sites (
   updated_at timestamptz not null default now()
 );
 
+create table public.tasks (
+  id bigint primary key generated always as identity,
+  activityname text not null,
+  project text,
+  projectstage text check (projectstage in ('Preliminary Assessment','Project Preparation','Project Development','Project Finance')),
+  vertical text check (vertical in ('Technical','PUE','ESG','Legal','Procurement')),
+  "assignedTo" text,
+  "startDate" date,
+  "dueDate" date,
+  status text not null default 'Pending' check (status in ('Pending','In Progress','Completed','Overdue')),
+  updated_at timestamptz not null default now()
+);
+
+-- Auto-set status to Overdue on insert/update if dueDate has passed and task is not Completed
+create or replace function public.set_task_overdue()
+returns trigger
+language plpgsql
+as $$
+begin
+  if new."dueDate" is not null
+     and new."dueDate" < current_date
+     and new.status not in ('Completed','Overdue') then
+    new.status := 'Overdue';
+  end if;
+  return new;
+end;
+$$;
+
+create trigger tasks_auto_overdue
+before insert or update on public.tasks
+for each row execute function public.set_task_overdue();
+
+-- Daily batch: mark all past-due non-completed tasks as Overdue.
+-- Enable pg_cron in Supabase Dashboard → Database → Extensions, then run:
+--   select cron.schedule('mark-overdue-tasks','0 0 * * *',
+--     $$update public.tasks set status='Overdue'
+--       where "dueDate" < current_date and status not in ('Completed','Overdue')$$);
+
 create or replace function public.set_updated_at()
 returns trigger
 language plpgsql
@@ -96,10 +135,15 @@ create trigger set_deployment_sites_updated_at
 before update on public.deployment_sites
 for each row execute function public.set_updated_at();
 
+create trigger set_tasks_updated_at
+before update on public.tasks
+for each row execute function public.set_updated_at();
+
 alter table public.projects enable row level security;
 alter table public.team_members enable row level security;
 alter table public.issues enable row level security;
 alter table public.deployment_sites enable row level security;
+alter table public.tasks enable row level security;
 
 create policy "Allow browser access projects"
 on public.projects for all
@@ -121,6 +165,12 @@ with check (true);
 
 create policy "Allow browser access deployment_sites"
 on public.deployment_sites for all
+to anon
+using (true)
+with check (true);
+
+create policy "Allow browser access tasks"
+on public.tasks for all
 to anon
 using (true)
 with check (true);
@@ -148,6 +198,32 @@ insert into public.deployment_sites (id, sitename, project, state, "LGA", connec
   (1, 'Kwali North', 'Kwali Cluster MeshGrid', 'FCT', 'Kwali', 140, 42),
   (2, 'Kwali South', 'Kwali Cluster MeshGrid', 'FCT', 'Gwagwalada', 180, 54),
   (3, 'Bwari East', 'Bwari Rural MeshGrid', 'FCT', 'Bwari', 80, 24);
+
+-- ─── MIGRATION (tasks): run this block on an existing database to add the tasks table ───
+-- create table if not exists public.tasks (
+--   id bigint primary key generated always as identity,
+--   activityname text not null,
+--   project text,
+--   projectstage text check (projectstage in ('Preliminary Assessment','Project Preparation','Project Development','Project Finance')),
+--   vertical text check (vertical in ('Technical','PUE','ESG','Legal','Procurement')),
+--   "assignedTo" text,
+--   "startDate" date,
+--   "dueDate" date,
+--   status text not null default 'Pending' check (status in ('Pending','In Progress','Completed','Overdue')),
+--   updated_at timestamptz not null default now()
+-- );
+-- create or replace function public.set_task_overdue() returns trigger language plpgsql as $$
+-- begin
+--   if new."dueDate" is not null and new."dueDate" < current_date and new.status not in ('Completed','Overdue') then
+--     new.status := 'Overdue';
+--   end if;
+--   return new;
+-- end;
+-- $$;
+-- create trigger tasks_auto_overdue before insert or update on public.tasks for each row execute function public.set_task_overdue();
+-- create trigger set_tasks_updated_at before update on public.tasks for each row execute function public.set_updated_at();
+-- alter table public.tasks enable row level security;
+-- create policy "Allow browser access tasks" on public.tasks for all to anon using (true) with check (true);
 
 -- ─── MIGRATION: run this block on existing databases instead of the full script ─
 -- alter table public.projects add column if not exists connections integer default 0;
