@@ -1,6 +1,6 @@
-# MeshGrid Pipeline Manager
+# Isolated Mini-Grid Pipeline Manager
 
-Static React dashboard for managing DREEF mesh grid pipeline projects, team members, issues, and deployment sites.
+Static React dashboard for managing DREEF Isolated Mini-Grid pipeline projects, team members, issues, and deployment sites.
 
 ## Local Run
 
