@@ -72,7 +72,7 @@ create table public.deployment_sites (
 );
 
 create table public.tasks (
-  id bigint primary key generated always as identity,
+  id bigint primary key,
   activityname text not null,
   project text,
   projectstage text check (projectstage in ('Preliminary Assessment','Project Preparation','Project Development','Project Finance')),
@@ -201,7 +201,7 @@ insert into public.deployment_sites (id, sitename, project, state, "LGA", connec
 
 -- ─── MIGRATION (tasks): run this block on an existing database to add the tasks table ───
 -- create table if not exists public.tasks (
---   id bigint primary key generated always as identity,
+--   id bigint primary key,
 --   activityname text not null,
 --   project text,
 --   projectstage text check (projectstage in ('Preliminary Assessment','Project Preparation','Project Development','Project Finance')),

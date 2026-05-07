@@ -27,6 +27,10 @@ const DB_TABLES = {
     name: "deployment_sites",
     columns: ["id", "sitename", "project", "state", "LGA", "connections", "PV"],
   },
+  tasks: {
+    name: "tasks",
+    columns: ["id", "activityname", "project", "projectstage", "vertical", "assignedTo", "startDate", "dueDate", "status"],
+  },
 };
 
 function pickColumns(row, columns) {
@@ -75,6 +79,10 @@ function defaultRow(table, row) {
 
   if (table === "issues") {
     return { id: row.id, project: "", category: "Other", description: "", owner: "", raised: today(), due: "", status: "Open", rag: "Amber" };
+  }
+
+  if (table === "tasks") {
+    return { id: row.id, activityname: "", project: "", projectstage: "Preliminary Assessment", vertical: "Technical", assignedTo: "", startDate: "", dueDate: "", status: "Pending" };
   }
 
   return {
@@ -189,7 +197,12 @@ const INPUT = { padding: "7px 10px", borderRadius: 6, border: "1.5px solid #dde"
 const LBL = { fontSize: 11, color: "#888", fontWeight: 700, display: "block", marginBottom: 3 };
 const EDIT_BTN = { background: "#f0f4ff", border: "none", borderRadius: 6, padding: "4px 8px", cursor: "pointer", fontSize: 12, marginRight: 4 };
 const DEL_BTN = { background: "#fff0f0", border: "none", borderRadius: 6, padding: "4px 8px", cursor: "pointer", fontSize: 12 };
-const TABS = [{ id: "pipeline", label: "Pipeline Manager" }, { id: "kpi", label: "KPI Dashboard" }, { id: "deployment", label: "Deployment Tracker" }, { id: "team", label: "Team Performance" }, { id: "issues", label: "Management Support" }];
+const TASK_STATUSES = ["Pending", "In Progress", "Completed", "Overdue"];
+const TASK_STAGES = ["Preliminary Assessment", "Project Preparation", "Project Development", "Project Finance"];
+const TASK_VERTICALS = ["Technical", "PUE", "ESG", "Legal", "Procurement"];
+const TASK_STATUS_C = { "Pending": "#6b7280", "In Progress": "#3b6cb7", "Completed": "#3a9e5f", "Overdue": "#dc2626" };
+
+const TABS = [{ id: "pipeline", label: "Pipeline Manager" }, { id: "kpi", label: "KPI Dashboard" }, { id: "deployment", label: "Deployment Tracker" }, { id: "team", label: "Team Performance" }, { id: "issues", label: "Management Support" }, { id: "activities", label: "Activities" }];
 
 // ─── DB HOOK ──────────────────────────────────────────────────────────────────
 function useSupabaseTable(table, seed) {
@@ -224,6 +237,11 @@ function useSupabaseTable(table, seed) {
 }
 
 // ─── COMPONENTS ───────────────────────────────────────────────────────────────
+function TaskStatusBadge({ status }) {
+  const c = TASK_STATUS_C[status] || "#888";
+  return <span style={{ background: c, color: "#fff", padding: "2px 10px", borderRadius: 20, fontSize: 10, fontWeight: 700, letterSpacing: 0.5, whiteSpace: "nowrap" }}>{status}</span>;
+}
+
 function SectionHeader({ label }) {
   return (
     <div style={{ marginBottom: 14 }}>
@@ -287,15 +305,17 @@ function App() {
   const [team, setTeam, teamLoading, teamErr] = useSupabaseTable("team", SEED_TEAM);
   const [issues, setIssues, issuesLoading, issuesErr] = useSupabaseTable("issues", SEED_ISSUES);
   const [deployment, setDeployment, deployLoading, deployErr] = useSupabaseTable("deployment", SEED_DEPLOYMENT);
+  const [tasks, setTasks, tasksLoading, tasksErr] = useSupabaseTable("tasks", []);
 
-  const loading = projLoading || teamLoading || issuesLoading || deployLoading;
-  const dbError = projErr || teamErr || issuesErr || deployErr;
+  const loading = projLoading || teamLoading || issuesLoading || deployLoading || tasksLoading;
+  const dbError = projErr || teamErr || issuesErr || deployErr || tasksErr;
 
   const [tab, setTab] = useState("pipeline");
   const [viewMode, setViewMode] = useState("list");
   const [deployViewMode, setDeployViewMode] = useState("list");
   const [teamViewMode, setTeamViewMode] = useState("grid");
   const [filterStage, setFilterStage] = useState("All");
+  const [taskFilter, setTaskFilter] = useState("All");
   const [saving, setSaving] = useState(false);
   const [lastSaved, setLastSaved] = useState("");
   const [confirmDelete, setConfirmDelete] = useState(null);
@@ -303,16 +323,19 @@ function App() {
   const [issueModal, setIssueModal] = useState(null);
   const [siteModal, setSiteModal] = useState(null);
   const [teamModal, setTeamModal] = useState(null);
+  const [taskModal, setTaskModal] = useState(null);
 
   const blankProject = () => ({ id: Date.now(), name: "", developer: "", state: "", stage: STAGES_LIST[0], clusterLead: "", rag: "Green", loi: false, jda: false, credit: false, fc: false, size: 0, connections: 0, pvCapacity: 0, startDate: "", targetCompletion: "", actualCompletion: "", subsidyExpected: 0, capexPerConn: 0, duration: 0, issue: "", lastUpdate: today(), targetClose: "", updateCompliance: 100, evidenceCompliance: 100, jdacost: 0 });
   const blankIssue = () => ({ id: Date.now(), project: "", category: ISSUE_CATS[0], description: "", owner: "", raised: today(), due: "", status: "Open", rag: "Amber" });
   const blankSite = () => ({ id: Date.now(), sitename: "", project: "", state: "", LGA: "", connections: 0, PV: 0 });
   const blankMember = () => ({ id: Date.now(), name: "", role: ROLES[0], assigned: 0, tasksDue: 0, overdue: 0, compliance: 100, rag: "Green" });
+  const blankTask = () => ({ id: Date.now(), activityname: "", project: "", projectstage: TASK_STAGES[0], vertical: TASK_VERTICALS[0], assignedTo: "", startDate: "", dueDate: "", status: "Pending" });
 
   const [pForm, setPForm] = useState(blankProject());
   const [iForm, setIForm] = useState(blankIssue());
   const [sForm, setSForm] = useState(blankSite());
   const [mForm, setMForm] = useState(blankMember());
+  const [tForm, setTForm] = useState(blankTask());
 
   const flash = () => { setSaving(true); setTimeout(() => { setSaving(false); setLastSaved(new Date().toLocaleTimeString("en-NG", { hour: "2-digit", minute: "2-digit" })); }, 900); };
 
@@ -344,6 +367,7 @@ function App() {
   const jdaCount = projects.filter(p => p.jda).length;
   const creditCount = projects.filter(p => p.credit).length;
   const filteredProjects = filterStage === "All" ? projects : projects.filter(p => p.stage === filterStage);
+  const filteredTasks = taskFilter === "All" ? tasks : tasks.filter(t => t.status === taskFilter);
   const openIssues = issues.filter(i => i.status !== "Resolved").length;
 
   const saveProject = () => { if (!pForm.name.trim()) return alert("Project name is required"); const duration = countWorkingDays(pForm.startDate, pForm.actualCompletion || today()); const projectToSave = { ...pForm, duration }; projectModal === "add" ? setProjects(ps => [...ps, { ...projectToSave, id: Date.now() }]) : setProjects(ps => ps.map(p => p.id === projectModal ? { ...projectToSave } : p)); flash(); setProjectModal(null); };
@@ -351,7 +375,8 @@ function App() {
   const updateIssueStatus = (id, status) => { setIssues(is => is.map(i => i.id === id ? { ...i, status, rag: status === "Resolved" ? "Green" : status === "Escalated" ? "Red" : "Amber" } : i)); flash(); };
   const saveSite = () => { if (!sForm.sitename.trim()) return alert("Site name is required"); siteModal === "add" ? setDeployment(ds => [...ds, { ...sForm, id: Date.now() }]) : setDeployment(ds => ds.map(d => d.id === siteModal ? { ...sForm } : d)); flash(); setSiteModal(null); };
   const saveMember = () => { if (!mForm.name.trim()) return alert("Name is required"); teamModal === "add" ? setTeam(ts => [...ts, { ...mForm, id: Date.now() }]) : setTeam(ts => ts.map(t => t.id === teamModal ? { ...mForm } : t)); flash(); setTeamModal(null); };
-  const executeDelete = () => { const { type, id } = confirmDelete; if (type === "project") setProjects(ps => ps.filter(p => p.id !== id)); if (type === "issue") setIssues(is => is.filter(i => i.id !== id)); if (type === "site") setDeployment(ds => ds.filter(d => d.id !== id)); if (type === "member") setTeam(ts => ts.filter(t => t.id !== id)); flash(); setConfirmDelete(null); };
+  const saveTask = () => { if (!tForm.activityname.trim()) return alert("Activity name is required"); taskModal === "add" ? setTasks(ts => [...ts, { ...tForm, id: Date.now() }]) : setTasks(ts => ts.map(t => t.id === taskModal ? { ...tForm } : t)); flash(); setTaskModal(null); };
+  const executeDelete = () => { const { type, id } = confirmDelete; if (type === "project") setProjects(ps => ps.filter(p => p.id !== id)); if (type === "issue") setIssues(is => is.filter(i => i.id !== id)); if (type === "site") setDeployment(ds => ds.filter(d => d.id !== id)); if (type === "member") setTeam(ts => ts.filter(t => t.id !== id)); if (type === "task") setTasks(ts => ts.filter(t => t.id !== id)); flash(); setConfirmDelete(null); };
 
   return (
     <div style={{ minHeight: "100vh", background: "#f2f4f7", fontFamily: "'Barlow','Segoe UI',sans-serif", color: "#1a1a2e" }}>
@@ -637,6 +662,44 @@ function App() {
             ))}
           </div>
         </>)}
+
+        {/* ══ ACTIVITIES ══ */}
+        {tab === "activities" && (<>
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}>
+            <SectionHeader label="ACTIVITIES"/>
+            <button onClick={()=>{setTForm(blankTask());setTaskModal("add");}} style={{background:"#3b6cb7",color:"#fff",border:"none",borderRadius:8,padding:"8px 18px",cursor:"pointer",fontWeight:700,fontSize:12}}>+ Add Task</button>
+          </div>
+          <div style={{display:"grid",gridTemplateColumns:"repeat(5,1fr)",gap:12,marginBottom:22}}>
+            {[["All",tasks.length,"#1a2a4a"],["Pending",tasks.filter(t=>t.status==="Pending").length,"#6b7280"],["In Progress",tasks.filter(t=>t.status==="In Progress").length,"#3b6cb7"],["Completed",tasks.filter(t=>t.status==="Completed").length,"#3a9e5f"],["Overdue",tasks.filter(t=>t.status==="Overdue").length,"#dc2626"]].map(([label,count,color])=>(
+              <div key={label} onClick={()=>setTaskFilter(label)} style={{background:"#fff",borderRadius:10,padding:"16px 18px",boxShadow:"0 2px 8px rgba(0,0,0,0.07)",borderTop:`3px solid ${color}`,cursor:"pointer",transition:"all 0.15s",outline:taskFilter===label?`2px solid ${color}`:"2px solid transparent",outlineOffset:2}}>
+                <div style={{fontSize:9,color:"#aaa",fontWeight:800,letterSpacing:1,marginBottom:6}}>{label.toUpperCase()}</div>
+                <div style={{fontSize:30,fontWeight:900,color:color,lineHeight:1}}>{count}</div>
+                <div style={{fontSize:10,color:"#888",marginTop:4}}>task{count!==1?"s":""}</div>
+              </div>
+            ))}
+          </div>
+          <div style={{background:"#fff",borderRadius:10,overflow:"hidden",boxShadow:"0 2px 8px rgba(0,0,0,0.07)"}}>
+            <table style={{width:"100%",borderCollapse:"collapse",fontSize:12}}>
+              <thead><tr style={{background:"#1a2a4a",color:"#fff"}}>{["ACTIVITY","PROJECT","STAGE","VERTICAL","ASSIGNED TO","START","DUE","STATUS",""].map(h=><th key={h} style={{padding:"10px 10px",textAlign:"left",fontSize:9,fontWeight:800,letterSpacing:0.7,whiteSpace:"nowrap"}}>{h}</th>)}</tr></thead>
+              <tbody>
+                {filteredTasks.map((t,i)=>(
+                  <tr key={t.id} style={{background:i%2===0?"#f7f9fc":"#fff",borderBottom:"1px solid #eef"}}>
+                    <td style={{padding:"9px 10px",fontWeight:700}}>{t.activityname}</td>
+                    <td style={{padding:"9px 10px",color:"#555",fontSize:11}}>{t.project||"—"}</td>
+                    <td style={{padding:"9px 10px"}}>{t.projectstage?<StagePill stage={t.projectstage}/>:"—"}</td>
+                    <td style={{padding:"9px 10px",color:"#666"}}>{t.vertical||"—"}</td>
+                    <td style={{padding:"9px 10px",color:"#555"}}>{t.assignedTo||"—"}</td>
+                    <td style={{padding:"9px 10px",color:"#666",whiteSpace:"nowrap"}}>{t.startDate||"—"}</td>
+                    <td style={{padding:"9px 10px",whiteSpace:"nowrap",color:t.dueDate&&new Date(t.dueDate)<new Date()&&t.status!=="Completed"?"#dc2626":"#444",fontWeight:t.dueDate&&new Date(t.dueDate)<new Date()&&t.status!=="Completed"?700:400}}>{t.dueDate||"—"}</td>
+                    <td style={{padding:"9px 10px"}}><TaskStatusBadge status={t.status}/></td>
+                    <td style={{padding:"9px 10px",whiteSpace:"nowrap"}}><button onClick={()=>{setTForm({...t});setTaskModal(t.id);}} style={EDIT_BTN}>✏️</button><button onClick={()=>setConfirmDelete({type:"task",id:t.id,label:t.activityname})} style={DEL_BTN}>🗑️</button></td>
+                  </tr>
+                ))}
+                {filteredTasks.length===0&&<tr><td colSpan={9} style={{padding:32,textAlign:"center",color:"#aaa",fontSize:12}}>No{taskFilter!=="All"?` "${taskFilter}"`:""} tasks found.</td></tr>}
+              </tbody>
+            </table>
+          </div>
+        </>)}
       </div>
 
       {/* MODALS */}
@@ -672,6 +735,19 @@ function App() {
           <div><label style={LBL}>Role</label><select value={mForm.role} onChange={e=>setMForm(f=>({...f,role:e.target.value}))} style={INPUT}>{ROLES.map(r=><option key={r}>{r}</option>)}</select></div>
           {[["Projects Assigned","assigned"],["Tasks Due","tasksDue"],["Overdue Tasks","overdue"],["Update Compliance (%)","compliance"]].map(([l,k])=><div key={k}><label style={LBL}>{l}</label><input type="number" value={mForm[k]} onChange={e=>setMForm(f=>({...f,[k]:Number(e.target.value)}))} style={INPUT}/></div>)}
           <div><label style={LBL}>RAG</label><select value={mForm.rag} onChange={e=>setMForm(f=>({...f,rag:e.target.value}))} style={INPUT}>{["Green","Amber","Red"].map(r=><option key={r}>{r}</option>)}</select></div>
+        </div>
+      </Modal>}
+
+      {taskModal!==null&&<Modal title={taskModal==="add"?"Add Task":"Edit Task"} onClose={()=>setTaskModal(null)} onSave={saveTask}>
+        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
+          <div style={{gridColumn:"span 2"}}><label style={LBL}>Activity Name</label><input value={tForm.activityname||""} onChange={e=>setTForm(f=>({...f,activityname:e.target.value}))} style={INPUT} placeholder="Enter activity name"/></div>
+          <div><label style={LBL}>Project</label><select value={tForm.project||""} onChange={e=>setTForm(f=>({...f,project:e.target.value}))} style={INPUT}><option value="">— Select Project —</option>{projects.map(p=><option key={p.id} value={p.name}>{p.name}</option>)}</select></div>
+          <div><label style={LBL}>Project Stage</label><select value={tForm.projectstage||TASK_STAGES[0]} onChange={e=>setTForm(f=>({...f,projectstage:e.target.value}))} style={INPUT}>{TASK_STAGES.map(s=><option key={s}>{s}</option>)}</select></div>
+          <div><label style={LBL}>Vertical</label><select value={tForm.vertical||TASK_VERTICALS[0]} onChange={e=>setTForm(f=>({...f,vertical:e.target.value}))} style={INPUT}>{TASK_VERTICALS.map(v=><option key={v}>{v}</option>)}</select></div>
+          <div><label style={LBL}>Assigned To</label><input value={tForm.assignedTo||""} onChange={e=>setTForm(f=>({...f,assignedTo:e.target.value}))} style={INPUT} placeholder="Enter name"/></div>
+          <div><label style={LBL}>Start Date</label><input type="date" value={tForm.startDate||""} onChange={e=>setTForm(f=>({...f,startDate:e.target.value}))} style={INPUT}/></div>
+          <div><label style={LBL}>Due Date</label><input type="date" value={tForm.dueDate||""} onChange={e=>setTForm(f=>({...f,dueDate:e.target.value}))} style={INPUT}/></div>
+          <div><label style={LBL}>Status</label><select value={tForm.status||"Pending"} onChange={e=>setTForm(f=>({...f,status:e.target.value}))} style={INPUT}>{TASK_STATUSES.map(s=><option key={s}>{s}</option>)}</select></div>
         </div>
       </Modal>}
 
