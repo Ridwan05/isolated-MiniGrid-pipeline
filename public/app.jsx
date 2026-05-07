@@ -279,16 +279,16 @@ function DbStatus({ saving, error, lastSaved }) {
 }
 
 function Modal({ title, children, onClose, onSave, saveLabel = "Save" }) {
-  return <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.55)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 999 }}><div style={{ background: "#fff", borderRadius: 14, padding: 30, width: 660, maxHeight: "88vh", overflowY: "auto", boxShadow: "0 10px 40px rgba(0,0,0,0.2)" }}><div style={{ fontWeight: 900, fontSize: 16, color: "#1a2a4a", marginBottom: 20 }}>{title}</div>{children}<div style={{ display: "flex", gap: 10, marginTop: 22, justifyContent: "flex-end" }}><button onClick={onClose} style={{ background: "#f0f0f0", color: "#666", border: "none", borderRadius: 8, padding: "9px 22px", cursor: "pointer", fontWeight: 700 }}>Cancel</button><button onClick={onSave} style={{ background: "#1a2a4a", color: "#fff", border: "none", borderRadius: 8, padding: "9px 22px", cursor: "pointer", fontWeight: 800 }}>{saveLabel}</button></div></div></div>;
+  return <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.55)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 999, padding: "16px" }}><div style={{ background: "#fff", borderRadius: 14, padding: 30, width: "min(660px, 100%)", maxHeight: "88vh", overflowY: "auto", boxShadow: "0 10px 40px rgba(0,0,0,0.2)" }}><div style={{ fontWeight: 900, fontSize: 16, color: "#1a2a4a", marginBottom: 20 }}>{title}</div>{children}<div style={{ display: "flex", gap: 10, marginTop: 22, justifyContent: "flex-end" }}><button onClick={onClose} style={{ background: "#f0f0f0", color: "#666", border: "none", borderRadius: 8, padding: "9px 22px", cursor: "pointer", fontWeight: 700 }}>Cancel</button><button onClick={onSave} style={{ background: "#1a2a4a", color: "#fff", border: "none", borderRadius: 8, padding: "9px 22px", cursor: "pointer", fontWeight: 800 }}>{saveLabel}</button></div></div></div>;
 }
 
 function Confirm({ message, onConfirm, onCancel }) {
-  return <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.55)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000 }}><div style={{ background: "#fff", borderRadius: 14, padding: 28, width: 380, boxShadow: "0 10px 40px rgba(0,0,0,0.2)" }}><div style={{ fontSize: 15, fontWeight: 700, color: "#1a2a4a", marginBottom: 18 }}>{message}</div><div style={{ display: "flex", gap: 10, justifyContent: "flex-end" }}><button onClick={onCancel} style={{ background: "#f0f0f0", color: "#666", border: "none", borderRadius: 8, padding: "8px 20px", cursor: "pointer", fontWeight: 700 }}>Cancel</button><button onClick={onConfirm} style={{ background: "#dc2626", color: "#fff", border: "none", borderRadius: 8, padding: "8px 20px", cursor: "pointer", fontWeight: 800 }}>Delete</button></div></div></div>;
+  return <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.55)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000, padding: "16px" }}><div style={{ background: "#fff", borderRadius: 14, padding: 28, width: "min(380px, 100%)", boxShadow: "0 10px 40px rgba(0,0,0,0.2)" }}><div style={{ fontSize: 15, fontWeight: 700, color: "#1a2a4a", marginBottom: 18 }}>{message}</div><div style={{ display: "flex", gap: 10, justifyContent: "flex-end" }}><button onClick={onCancel} style={{ background: "#f0f0f0", color: "#666", border: "none", borderRadius: 8, padding: "8px 20px", cursor: "pointer", fontWeight: 700 }}>Cancel</button><button onClick={onConfirm} style={{ background: "#dc2626", color: "#fff", border: "none", borderRadius: 8, padding: "8px 20px", cursor: "pointer", fontWeight: 800 }}>Delete</button></div></div></div>;
 }
 
 function ProjectForm({ form, setForm }) {
   return (
-    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+    <div className="rsp-form-2col" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
       {[["Project Name","name","text"],["Developer","developer","text"],["State","state","text"],["Cluster Lead","clusterLead","text"],["Target FC","targetClose","text"]].map(([l,k]) => <div key={k}><label style={LBL}>{l}</label><input value={form[k]||""} onChange={e=>setForm(f=>({...f,[k]:e.target.value}))} style={INPUT}/></div>)}
       {[["Size (₦Bn)","size"],["Connections Planned","connections"],["PV Capacity (kWp)","pvCapacity"],["CAPEX/conn (₦)","capexPerConn"],["Subsidy Expected (₦)","subsidyExpected"],["JDA Cost (₦)","jdacost"]].map(([l,k]) => <div key={k}><label style={LBL}>{l}</label><input type="number" value={form[k]??0} onChange={e=>setForm(f=>({...f,[k]:Number(e.target.value)}))} style={INPUT}/></div>)}
       <div><label style={LBL}>Start Date</label><input type="date" value={form.startDate||""} onChange={e=>{const sd=e.target.value;setForm(f=>({...f,startDate:sd,targetCompletion:sd?addWorkingDays(sd,90):f.targetCompletion}));}} style={INPUT}/></div>
@@ -383,11 +383,11 @@ function App() {
 
   return (
     <div style={{ minHeight: "100vh", background: "#f2f4f7", fontFamily: "'Barlow','Segoe UI',sans-serif", color: "#1a1a2e" }}>
-      <style>{`@keyframes spin{to{transform:rotate(360deg)}}@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.3}}tbody tr:hover td{background:#f0f4ff!important}`}</style>
+      <style>{`@keyframes spin{to{transform:rotate(360deg)}}@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.3}}tbody tr:hover td{background:#f0f4ff!important}.rsp-header-inner{flex-wrap:wrap;gap:8px}.rsp-header-right{flex-wrap:wrap}.rsp-tabs{flex-wrap:wrap}.rsp-tab-btn{white-space:nowrap}@media(max-width:1024px){.rsp-biz-grid{grid-template-columns:1fr 1fr!important}.rsp-milestones{grid-template-columns:repeat(2,1fr)!important}}@media(max-width:768px){.rsp-header{padding:0 14px!important}.rsp-header-inner{flex-direction:column;align-items:flex-start}.rsp-header-right{width:100%;justify-content:flex-end}.rsp-main{padding:16px 12px!important}.rsp-stage-row{flex-direction:column!important}.rsp-biz-grid{grid-template-columns:1fr!important}.rsp-milestones{grid-template-columns:repeat(2,1fr)!important}.rsp-kpi-3{grid-template-columns:1fr 1fr!important}.rsp-kpi-2{grid-template-columns:1fr!important}.rsp-cards-5{grid-template-columns:repeat(3,1fr)!important}.rsp-cards-4{grid-template-columns:repeat(2,1fr)!important}.rsp-filter-bar{flex-wrap:wrap!important;gap:6px!important}.rsp-form-2col{grid-template-columns:1fr!important}}@media(max-width:480px){.rsp-header{padding:0 10px!important}.rsp-tab-btn{padding:6px 8px!important;font-size:10px!important}.rsp-main{padding:10px 8px!important}.rsp-kpi-3{grid-template-columns:1fr!important}.rsp-cards-5{grid-template-columns:repeat(2,1fr)!important}.rsp-cards-4{grid-template-columns:repeat(2,1fr)!important}.rsp-biz-grid{grid-template-columns:1fr!important}}`}</style>
 
       {/* HEADER */}
-      <div style={{ background: "#1a2a4a", padding: "0 28px", boxShadow: "0 2px 12px rgba(0,0,0,0.2)" }}>
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", paddingTop: 16, paddingBottom: 10 }}>
+      <div className="rsp-header" style={{ background: "#1a2a4a", padding: "0 28px", boxShadow: "0 2px 12px rgba(0,0,0,0.2)" }}>
+        <div className="rsp-header-inner" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", paddingTop: 16, paddingBottom: 10 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
             <div style={{ width: 38, height: 38, background: "#3b6cb7", borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 900, color: "#fff", fontSize: 18 }}>D</div>
             <div>
@@ -395,24 +395,24 @@ function App() {
               <div style={{ fontSize: 18, fontWeight: 900, color: "#fff", letterSpacing: 0.3 }}>PROJECT PIPELINE MANAGER <span style={{ marginLeft: 10, fontSize: 10, background: "#3a9e5f", color: "#fff", padding: "3px 10px", borderRadius: 20, fontWeight: 700, verticalAlign: "middle", letterSpacing: 1 }}>MESH GRID</span></div>
             </div>
           </div>
-          <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
+          <div className="rsp-header-right" style={{ display: "flex", gap: 12, alignItems: "center" }}>
             <div style={{ background: "rgba(255,255,255,0.08)", padding: "5px 12px", borderRadius: 8 }}><DbStatus saving={saving} error={dbError} lastSaved={lastSaved} /></div>
             {openIssues > 0 && <div style={{ background: "#dc2626", color: "#fff", padding: "4px 12px", borderRadius: 20, fontSize: 11, fontWeight: 700 }}>{openIssues} Open Issue{openIssues > 1 ? "s" : ""}</div>}
             <button onClick={() => { setPForm(blankProject()); setProjectModal("add"); }} style={{ background: "#3a9e5f", color: "#fff", border: "none", borderRadius: 8, padding: "9px 20px", cursor: "pointer", fontWeight: 800, fontSize: 12 }}>+ Add Project</button>
           </div>
         </div>
-        <div style={{ display: "flex", gap: 2 }}>
-          {TABS.map(t => <button key={t.id} onClick={() => setTab(t.id)} style={{ background: tab === t.id ? "#fff" : "transparent", color: tab === t.id ? "#1a2a4a" : "rgba(255,255,255,0.65)", border: "none", cursor: "pointer", padding: "8px 18px", borderRadius: "8px 8px 0 0", fontSize: 12, fontWeight: 800, letterSpacing: 0.5, transition: "all 0.15s" }}>{t.label}{t.id === "issues" && openIssues > 0 && <span style={{ marginLeft: 5, background: "#dc2626", color: "#fff", borderRadius: 10, padding: "0 5px", fontSize: 9 }}>{openIssues}</span>}</button>)}
+        <div className="rsp-tabs" style={{ display: "flex", gap: 2 }}>
+          {TABS.map(t => <button key={t.id} onClick={() => setTab(t.id)} className="rsp-tab-btn" style={{ background: tab === t.id ? "#fff" : "transparent", color: tab === t.id ? "#1a2a4a" : "rgba(255,255,255,0.65)", border: "none", cursor: "pointer", padding: "8px 18px", borderRadius: "8px 8px 0 0", fontSize: 12, fontWeight: 800, letterSpacing: 0.5, transition: "all 0.15s" }}>{t.label}{t.id === "issues" && openIssues > 0 && <span style={{ marginLeft: 5, background: "#dc2626", color: "#fff", borderRadius: 10, padding: "0 5px", fontSize: 9 }}>{openIssues}</span>}</button>)}
         </div>
       </div>
 
-      <div style={{ padding: "24px 28px", maxWidth: 1300, margin: "0 auto" }}>
+      <div className="rsp-main" style={{ padding: "24px 28px", maxWidth: 1300, margin: "0 auto" }}>
 
         {/* ══ PIPELINE MANAGER ══ */}
         {tab === "pipeline" && (<>
           <div style={{ marginBottom: 26 }}>
             <SectionHeader label="PROJECT DEVELOPMENT STAGES" />
-            <div style={{ display: "flex", gap: 0, alignItems: "stretch" }}>
+            <div className="rsp-stage-row" style={{ display: "flex", gap: 0, alignItems: "stretch" }}>
               {stageGroups.map((s, i) => (
                 <div key={s.label} style={{ display: "flex", alignItems: "center", flex: 1 }}>
                   <div onClick={() => setFilterStage(s.label === filterStage ? "All" : s.label)} style={{ background: s.color, borderRadius: 10, padding: "18px 18px", flex: 1, cursor: "pointer", boxShadow: filterStage === s.label ? "0 4px 18px rgba(0,0,0,0.22)" : "0 2px 8px rgba(0,0,0,0.10)", transform: filterStage === s.label ? "translateY(-3px)" : "none", transition: "all 0.15s", border: filterStage === s.label ? "2px solid #fff" : "2px solid transparent" }}>
@@ -429,7 +429,7 @@ function App() {
 
           <div style={{ marginBottom: 26 }}>
             <SectionHeader label="PERFORMANCE MILESTONES" />
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 14 }}>
+            <div className="rsp-milestones" style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 14 }}>
               {[{ label: "Letter of Intent Signed", value: loiCount, icon: "📋", color: "#3a9e5f" }, { label: "Joint Development Agreement Signed", value: jdaCount, icon: "📊", color: "#5aaa6b" }, { label: "Credit Committee Approval", value: creditCount, icon: "🛡️", color: "#2d5a3d" }, { label: "Financial Close", value: `₦${projects.filter(p => p.fc).reduce((s, p) => s + p.size, 0).toFixed(1)}Bn`, icon: "⚡", color: "#1a2a4a" }].map((m, i) => (
                 <div key={i} style={{ background: m.color, borderRadius: 10, padding: "20px 20px", display: "flex", alignItems: "center", gap: 14, boxShadow: "0 2px 8px rgba(0,0,0,0.10)" }}>
                   <div style={{ width: 44, height: 44, borderRadius: "50%", background: "rgba(255,255,255,0.15)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20, flexShrink: 0 }}>{m.icon}</div>
@@ -441,7 +441,7 @@ function App() {
 
           <div style={{ marginBottom: 26 }}>
             <SectionHeader label="MESH GRID BUSINESS MODEL" />
-            <div style={{ display: "grid", gridTemplateColumns: "180px 1fr 1fr", gap: 14 }}>
+            <div className="rsp-biz-grid" style={{ display: "grid", gridTemplateColumns: "180px 1fr 1fr", gap: 14 }}>
               <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
                 {[{ label: "TOTAL PROJECT SIZE", value: `₦${totalSize.toFixed(1)}Bn`, bg: "#3b6cb7", icon: "⚡" }, { label: "TOTAL PROJECTS", value: projects.length, bg: "#1a2a4a", icon: "🔋" }].map(c => <div key={c.label} style={{ background: c.bg, borderRadius: 10, padding: "20px 18px", flex: 1 }}><div style={{ fontSize: 28, marginBottom: 8 }}>{c.icon}</div><div style={{ fontSize: 10, color: "rgba(255,255,255,0.65)", fontWeight: 700, letterSpacing: 1 }}>{c.label}</div><div style={{ fontSize: 24, fontWeight: 900, color: "#fff" }}>{c.value}</div></div>)}
               </div>
@@ -450,7 +450,7 @@ function App() {
                 <div style={{ display: "flex", justifyContent: "center", marginBottom: 14 }}><Donut segments={stageGroups.map(s => ({ color: s.color, value: s.val || 0.01 }))} size={150} stroke={30} /></div>
                 {stageGroups.map(s => <div key={s.label} style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 5 }}><div style={{ width: 10, height: 10, borderRadius: 2, background: s.color, flexShrink: 0 }} /><span style={{ fontSize: 11, color: "#555", flex: 1 }}>{s.label}</span><span style={{ fontSize: 11, fontWeight: 700 }}>₦{s.val.toFixed(1)}Bn</span></div>)}
               </div>
-              <div style={{ background: "#fff", borderRadius: 10, overflow: "hidden", boxShadow: "0 2px 8px rgba(0,0,0,0.07)" }}>
+              <div style={{ background: "#fff", borderRadius: 10, overflowX: "auto", boxShadow: "0 2px 8px rgba(0,0,0,0.07)" }}>
                 <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
                   <thead><tr style={{ background: "#1a2a4a", color: "#fff" }}>{["PROJECT","LOI","JDA","CONN.","SIZE","SHARE"].map(h=><th key={h} style={{padding:"9px 10px",textAlign:"left",fontSize:9,fontWeight:800,letterSpacing:0.8}}>{h}</th>)}</tr></thead>
                   <tbody>
@@ -463,7 +463,7 @@ function App() {
           </div>
 
           <div>
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
+            <div className="rsp-filter-bar" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
               <SectionHeader label="PROJECTS REGISTER" />
               <div style={{ display: "flex", gap: 8 }}>
                 <select value={filterStage} onChange={e=>setFilterStage(e.target.value)} style={{...INPUT,width:190,fontSize:12}}><option value="All">All Stages</option>{STAGES_LIST.map(s=><option key={s}>{s}</option>)}</select>
@@ -471,7 +471,7 @@ function App() {
               </div>
             </div>
             {viewMode === "list" ? (
-              <div style={{background:"#fff",borderRadius:10,overflow:"hidden",boxShadow:"0 2px 8px rgba(0,0,0,0.07)"}}>
+              <div style={{background:"#fff",borderRadius:10,overflowX:"auto",boxShadow:"0 2px 8px rgba(0,0,0,0.07)"}}>
                 <table style={{width:"100%",borderCollapse:"collapse",fontSize:12}}>
                   <thead><tr style={{background:"#1a2a4a",color:"#fff"}}>{["PROJECT","DEVELOPER","STATE","STAGE","LEAD","CONN.","PV (kWp)","DURATION","SIZE","JDA COST","LOI","JDA","RAG","ISSUE",""].map(h=><th key={h} style={{padding:"10px 10px",textAlign:"left",fontSize:9,fontWeight:800,letterSpacing:0.8,whiteSpace:"nowrap"}}>{h}</th>)}</tr></thead>
                   <tbody>
@@ -521,16 +521,16 @@ function App() {
         {/* ══ KPI DASHBOARD ══ */}
         {tab === "kpi" && (<>
           <SectionHeader label="KPI DASHBOARD — MESH GRID" />
-          <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:14,marginBottom:14}}>
+          <div className="rsp-kpi-3" style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:14,marginBottom:14}}>
             <KpiCard label="JDAs Signed" actual={kpis.jdasSigned} target={3} unit="" rag={ragFor(kpis.jdasSigned,3)} detail={`${loiCount} LOIs in pipeline`}/>
             <KpiCard label="LOI → JDA Conversion" actual={kpis.loiToJda} target={80} unit="%" rag={ragFor(kpis.loiToJda,80)} detail={`${jdaCount} of ${loiCount} converted`}/>
             <KpiCard label="Projects to Submission" actual={kpis.toSubmission} target={70} unit="%" rag={ragFor(kpis.toSubmission,70)} detail="At Dev or Finance stage"/>
           </div>
-          <div style={{display:"grid",gridTemplateColumns:"repeat(2,1fr)",gap:14,marginBottom:24}}>
+          <div className="rsp-kpi-2" style={{display:"grid",gridTemplateColumns:"repeat(2,1fr)",gap:14,marginBottom:24}}>
             <KpiCard label="Update Compliance" actual={kpis.avgUpdateCompliance} target={100} unit="%" rag={ragFor(kpis.avgUpdateCompliance,100)} detail="Avg across team"/>
             <KpiCard label="Evidence Compliance" actual={kpis.avgEvidenceCompliance} target={100} unit="%" rag={ragFor(kpis.avgEvidenceCompliance,100)} detail="Avg across team"/>
           </div>
-          <div style={{background:"#fff",borderRadius:10,overflow:"hidden",boxShadow:"0 2px 8px rgba(0,0,0,0.07)"}}>
+          <div style={{background:"#fff",borderRadius:10,overflowX:"auto",boxShadow:"0 2px 8px rgba(0,0,0,0.07)"}}>
             <table style={{width:"100%",borderCollapse:"collapse",fontSize:13}}>
               <thead><tr style={{background:"#1a2a4a",color:"#fff"}}>{["METRIC","TARGET","ACTUAL","VARIANCE","RAG","PROGRESS"].map(h=><th key={h} style={{padding:"10px 16px",textAlign:"left",fontSize:10,fontWeight:800,letterSpacing:0.8}}>{h}</th>)}</tr></thead>
               <tbody>
@@ -547,7 +547,7 @@ function App() {
 
         {/* ══ DEPLOYMENT TRACKER ══ */}
         {tab === "deployment" && (<>
-          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}>
+          <div className="rsp-filter-bar" style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}>
             <SectionHeader label="DEPLOYMENT TRACKER"/>
             <div style={{display:"flex",gap:8,alignItems:"center"}}>
               <div style={{display:"flex",background:"#fff",borderRadius:8,overflow:"hidden",border:"1.5px solid #dde"}}>{[["list","☰"],["grid","⊞"]].map(([m,icon])=><button key={m} onClick={()=>setDeployViewMode(m)} style={{background:deployViewMode===m?"#3b6cb7":"transparent",color:deployViewMode===m?"#fff":"#888",border:"none",padding:"7px 13px",cursor:"pointer",fontSize:16}}>{icon}</button>)}</div>
@@ -565,7 +565,7 @@ function App() {
               ))}
             </div>
           ) : (
-            <div style={{background:"#fff",borderRadius:10,overflow:"hidden",boxShadow:"0 2px 8px rgba(0,0,0,0.07)"}}>
+            <div style={{background:"#fff",borderRadius:10,overflowX:"auto",boxShadow:"0 2px 8px rgba(0,0,0,0.07)"}}>
               <table style={{width:"100%",borderCollapse:"collapse",fontSize:12}}>
                 <thead><tr style={{background:"#1a2a4a",color:"#fff"}}>{["SITE","PROJECT","STATE","LGA","CONNECTIONS","PV (kWp)",""].map(h=><th key={h} style={{padding:"10px 10px",textAlign:"left",fontSize:9,fontWeight:800,letterSpacing:0.7}}>{h}</th>)}</tr></thead>
                 <tbody>
@@ -589,7 +589,7 @@ function App() {
 
         {/* ══ TEAM PERFORMANCE ══ */}
         {tab === "team" && (<>
-          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}>
+          <div className="rsp-filter-bar" style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}>
             <SectionHeader label="TEAM PERFORMANCE"/>
             <div style={{display:"flex",gap:8,alignItems:"center"}}>
               <div style={{display:"flex",background:"#fff",borderRadius:8,overflow:"hidden",border:"1.5px solid #dde"}}>{[["list","☰"],["grid","⊞"]].map(([m,icon])=><button key={m} onClick={()=>setTeamViewMode(m)} style={{background:teamViewMode===m?"#1a2a4a":"transparent",color:teamViewMode===m?"#fff":"#888",border:"none",padding:"7px 13px",cursor:"pointer",fontSize:16}}>{icon}</button>)}</div>
@@ -609,7 +609,7 @@ function App() {
               ))}
             </div>
           ) : (
-            <div style={{background:"#fff",borderRadius:10,overflow:"hidden",boxShadow:"0 2px 8px rgba(0,0,0,0.07)"}}>
+            <div style={{background:"#fff",borderRadius:10,overflowX:"auto",boxShadow:"0 2px 8px rgba(0,0,0,0.07)"}}>
               <table style={{width:"100%",borderCollapse:"collapse",fontSize:13}}>
                 <thead><tr style={{background:"#1a2a4a",color:"#fff"}}>{["NAME","ROLE","OVERDUE","PENDING","COMPLETED","RAG",""].map(h=><th key={h} style={{padding:"10px 14px",textAlign:"left",fontSize:10,fontWeight:800,letterSpacing:0.8}}>{h}</th>)}</tr></thead>
                 <tbody>
@@ -630,11 +630,11 @@ function App() {
 
         {/* ══ MANAGEMENT SUPPORT ══ */}
         {tab === "issues" && (<>
-          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:4}}>
+          <div className="rsp-filter-bar" style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:4}}>
             <SectionHeader label="MANAGEMENT SUPPORT LOG"/>
             <button onClick={()=>{setIForm(blankIssue());setIssueModal("add");}} style={{background:"#e07b39",color:"#fff",border:"none",borderRadius:8,padding:"8px 18px",cursor:"pointer",fontWeight:700,fontSize:12,marginBottom:14}}>+ Log Issue</button>
           </div>
-          <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:14,marginBottom:20}}>
+          <div className="rsp-cards-4" style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:14,marginBottom:20}}>
             {[["Open",issues.filter(i=>i.status==="Open").length,"Amber"],["In Progress",issues.filter(i=>i.status==="In Progress").length,"Amber"],["Escalated",issues.filter(i=>i.status==="Escalated").length,"Red"],["Resolved",issues.filter(i=>i.status==="Resolved").length,"Green"]].map(([s,c,r])=>(
               <div key={s} style={{background:"#fff",borderRadius:10,padding:"14px 18px",borderLeft:`4px solid ${RAG_C[r]}`,boxShadow:"0 2px 8px rgba(0,0,0,0.07)"}}>
                 <div style={{fontSize:10,color:"#888",fontWeight:700,letterSpacing:1}}>{s.toUpperCase()}</div>
@@ -666,7 +666,7 @@ function App() {
 
         {/* ══ ACTIVITIES ══ */}
         {tab === "activities" && (<>
-          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}>
+          <div className="rsp-filter-bar" style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}>
             <SectionHeader label="ACTIVITIES"/>
             <div style={{display:"flex",gap:8,alignItems:"center"}}>
               <select value={taskProjectFilter} onChange={e=>setTaskProjectFilter(e.target.value)} style={{...INPUT,width:220,fontSize:12}}>
@@ -676,7 +676,7 @@ function App() {
               <button onClick={()=>{setTForm(blankTask());setTaskModal("add");}} style={{background:"#3b6cb7",color:"#fff",border:"none",borderRadius:8,padding:"8px 18px",cursor:"pointer",fontWeight:700,fontSize:12}}>+ Add Task</button>
             </div>
           </div>
-          <div style={{display:"grid",gridTemplateColumns:"repeat(5,1fr)",gap:12,marginBottom:22}}>
+          <div className="rsp-cards-5" style={{display:"grid",gridTemplateColumns:"repeat(5,1fr)",gap:12,marginBottom:22}}>
             {[["All",tasks.length,"#1a2a4a"],["Pending",tasks.filter(t=>t.status==="Pending").length,"#6b7280"],["In Progress",tasks.filter(t=>t.status==="In Progress").length,"#3b6cb7"],["Completed",tasks.filter(t=>t.status==="Completed").length,"#3a9e5f"],["Overdue",tasks.filter(t=>t.status==="Overdue").length,"#dc2626"]].map(([label,count,color])=>(
               <div key={label} onClick={()=>setTaskFilter(label)} style={{background:"#fff",borderRadius:10,padding:"16px 18px",boxShadow:"0 2px 8px rgba(0,0,0,0.07)",borderTop:`3px solid ${color}`,cursor:"pointer",transition:"all 0.15s",outline:taskFilter===label?`2px solid ${color}`:"2px solid transparent",outlineOffset:2}}>
                 <div style={{fontSize:9,color:"#aaa",fontWeight:800,letterSpacing:1,marginBottom:6}}>{label.toUpperCase()}</div>
@@ -685,7 +685,7 @@ function App() {
               </div>
             ))}
           </div>
-          <div style={{background:"#fff",borderRadius:10,overflow:"hidden",boxShadow:"0 2px 8px rgba(0,0,0,0.07)"}}>
+          <div style={{background:"#fff",borderRadius:10,overflowX:"auto",boxShadow:"0 2px 8px rgba(0,0,0,0.07)"}}>
             <table style={{width:"100%",borderCollapse:"collapse",fontSize:12}}>
               <thead><tr style={{background:"#1a2a4a",color:"#fff"}}>{["ACTIVITY","PROJECT","STAGE","VERTICAL","ASSIGNED TO","START","DUE","STATUS",""].map(h=><th key={h} style={{padding:"10px 10px",textAlign:"left",fontSize:9,fontWeight:800,letterSpacing:0.7,whiteSpace:"nowrap"}}>{h}</th>)}</tr></thead>
               <tbody>
@@ -713,7 +713,7 @@ function App() {
       {projectModal!==null&&<Modal title={projectModal==="add"?"Add Mesh Grid Project":"Edit Project"} onClose={()=>setProjectModal(null)} onSave={saveProject}><ProjectForm form={pForm} setForm={setPForm}/></Modal>}
 
       {issueModal!==null&&<Modal title={issueModal==="add"?"Log Issue":"Edit Issue"} onClose={()=>setIssueModal(null)} onSave={saveIssue}>
-        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
+        <div className="rsp-form-2col" style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
           <div><label style={LBL}>Project</label><input value={iForm.project} onChange={e=>setIForm(f=>({...f,project:e.target.value}))} style={INPUT}/></div>
           <div><label style={LBL}>Owner</label><input value={iForm.owner} onChange={e=>setIForm(f=>({...f,owner:e.target.value}))} style={INPUT}/></div>
           <div><label style={LBL}>Date Raised</label><input type="date" value={iForm.raised} onChange={e=>setIForm(f=>({...f,raised:e.target.value}))} style={INPUT}/></div>
@@ -726,7 +726,7 @@ function App() {
       </Modal>}
 
       {siteModal!==null&&<Modal title={siteModal==="add"?"Add Deployment Site":"Edit Site"} onClose={()=>setSiteModal(null)} onSave={saveSite}>
-        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
+        <div className="rsp-form-2col" style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
           <div><label style={LBL}>Site Name</label><input value={sForm.sitename||""} onChange={e=>setSForm(f=>({...f,sitename:e.target.value}))} style={INPUT}/></div>
           <div><label style={LBL}>Project</label><select value={sForm.project||""} onChange={e=>setSForm(f=>({...f,project:e.target.value}))} style={INPUT}><option value="">— Select Project —</option>{projects.map(p=><option key={p.id} value={p.name}>{p.name}</option>)}</select></div>
           <div><label style={LBL}>State</label><input value={sForm.state||""} onChange={e=>setSForm(f=>({...f,state:e.target.value}))} style={INPUT}/></div>
@@ -747,7 +747,7 @@ function App() {
       </Modal>}
 
       {taskModal!==null&&<Modal title={taskModal==="add"?"Add Task":"Edit Task"} onClose={()=>setTaskModal(null)} onSave={saveTask}>
-        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
+        <div className="rsp-form-2col" style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
           <div style={{gridColumn:"span 2"}}><label style={LBL}>Activity Name</label><input value={tForm.activityname||""} onChange={e=>setTForm(f=>({...f,activityname:e.target.value}))} style={INPUT} placeholder="Enter activity name"/></div>
           <div><label style={LBL}>Project</label><select value={tForm.project||""} onChange={e=>setTForm(f=>({...f,project:e.target.value}))} style={INPUT}><option value="">— Select Project —</option>{projects.map(p=><option key={p.id} value={p.name}>{p.name}</option>)}</select></div>
           <div><label style={LBL}>Project Stage</label><select value={tForm.projectstage||TASK_STAGES[0]} onChange={e=>setTForm(f=>({...f,projectstage:e.target.value}))} style={INPUT}>{TASK_STAGES.map(s=><option key={s}>{s}</option>)}</select></div>
