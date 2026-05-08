@@ -202,7 +202,7 @@ const TASK_STAGES = ["Preliminary Assessment", "Project Preparation", "Project D
 const TASK_VERTICALS = ["Technical", "PUE", "ESG", "Legal", "Procurement"];
 const TASK_STATUS_C = { "Pending": "#6b7280", "In Progress": "#3b6cb7", "Completed": "#3a9e5f", "Overdue": "#dc2626" };
 
-const TABS = [{ id: "pipeline", label: "Pipeline Manager" }, { id: "kpi", label: "KPI Dashboard" }, { id: "deployment", label: "Deployment Tracker" }, { id: "team", label: "Team Performance" }, { id: "issues", label: "Management Support" }, { id: "activities", label: "Activities" }];
+const TABS = [{ id: "pipeline", label: "Pipeline Manager" }, { id: "kpi", label: "KPI Dashboard" }, { id: "deployment", label: "Deployment Tracker" }, { id: "team", label: "Team Performance" }, { id: "issues", label: "Management Support" }, { id: "activities", label: "Task(s)" }];
 
 // ─── DB HOOK ──────────────────────────────────────────────────────────────────
 function useSupabaseTable(table, seed) {
