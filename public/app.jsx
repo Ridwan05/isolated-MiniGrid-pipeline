@@ -689,47 +689,23 @@ function App() {
 
         {/* ══ ACTIVITIES LOG ══ */}
         {tab === "activitieslog" && (<>
-          <div className="rsp-filter-bar" style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}>
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}>
             <SectionHeader label="ACTIVITIES LOG"/>
-            <div style={{display:"flex",gap:8,alignItems:"center"}}>
-              <select value={activityProjectFilter} onChange={e=>setActivityProjectFilter(e.target.value)} style={{...INPUT,width:220,fontSize:12}}>
-                <option value="All">All Projects</option>
-                {projects.map(p=><option key={p.id} value={p.name}>{p.name}</option>)}
-              </select>
-              <button onClick={()=>{setAForm(blankActivity());setActivityModal("add");}} style={{background:"#e07b39",color:"#fff",border:"none",borderRadius:8,padding:"8px 18px",cursor:"pointer",fontWeight:700,fontSize:12}}>+ Add Activity</button>
-            </div>
-          </div>
-          <div className="rsp-cards-5" style={{display:"grid",gridTemplateColumns:"repeat(5,1fr)",gap:12,marginBottom:22}}>
-            {[["All",(activities||[]).length,"#1a2a4a"],["Pending",(activities||[]).filter(a=>a.activitystatus==="Pending").length,"#6b7280"],["In Progress",(activities||[]).filter(a=>a.activitystatus==="In Progress").length,"#3b6cb7"],["Completed",(activities||[]).filter(a=>a.activitystatus==="Completed").length,"#3a9e5f"],["Overdue",(activities||[]).filter(a=>a.activitystatus==="Overdue").length,"#dc2626"]].map(([label,count,color])=>(
-              <div key={label} onClick={()=>setActivityFilter(label)} style={{background:"#fff",borderRadius:10,padding:"16px 18px",boxShadow:"0 2px 8px rgba(0,0,0,0.07)",borderTop:`3px solid ${color}`,cursor:"pointer",transition:"all 0.15s",outline:activityFilter===label?`2px solid ${color}`:"2px solid transparent",outlineOffset:2}}>
-                <div style={{fontSize:9,color:"#aaa",fontWeight:800,letterSpacing:1,marginBottom:6}}>{label.toUpperCase()}</div>
-                <div style={{fontSize:30,fontWeight:900,color:color,lineHeight:1}}>{count}</div>
-                <div style={{fontSize:10,color:"#888",marginTop:4}}>activit{count!==1?"ies":"y"}</div>
-              </div>
-            ))}
+            <button onClick={()=>{setAForm(blankActivity());setActivityModal("add");}} style={{background:"#e07b39",color:"#fff",border:"none",borderRadius:8,padding:"8px 18px",cursor:"pointer",fontWeight:700,fontSize:12}}>+ Add Activity</button>
           </div>
           <div style={{background:"#fff",borderRadius:10,overflowX:"auto",boxShadow:"0 2px 8px rgba(0,0,0,0.07)"}}>
             <table style={{width:"100%",borderCollapse:"collapse",fontSize:12}}>
-              <thead><tr style={{background:"#1a2a4a",color:"#fff"}}>{["ACTIVITY","PROJECT","SITE","TYPE","CATEGORY","ASSIGNED TO","DATE","DUE DATE","STATUS","PROGRESS",""].map(h=><th key={h} style={{padding:"10px 10px",textAlign:"left",fontSize:9,fontWeight:800,letterSpacing:0.7,whiteSpace:"nowrap"}}>{h}</th>)}</tr></thead>
+              <thead><tr style={{background:"#1a2a4a",color:"#fff"}}>{["ACTIVITY","PROJECT STAGE","CATEGORY",""].map(h=><th key={h} style={{padding:"10px 14px",textAlign:"left",fontSize:9,fontWeight:800,letterSpacing:0.7,whiteSpace:"nowrap"}}>{h}</th>)}</tr></thead>
               <tbody>
-                {filteredActivities.map((a,i)=>(
+                {(activities||[]).map((a,i)=>(
                   <tr key={a.id} style={{background:i%2===0?"#f7f9fc":"#fff",borderBottom:"1px solid #eef"}}>
-                    <td style={{padding:"9px 10px",fontWeight:700,color:"#1a2a4a",maxWidth:160}}>{a.activityname||"—"}</td>
-                    <td style={{padding:"9px 10px",color:"#555",fontSize:11,maxWidth:140}}>{a.projectname||"—"}</td>
-                    <td style={{padding:"9px 10px",color:"#666",fontSize:11}}>{a.sitename||"—"}</td>
-                    <td style={{padding:"9px 10px",color:"#555",fontSize:11}}>{a.activitytype||"—"}</td>
-                    <td style={{padding:"9px 10px",color:"#555",fontSize:11}}>{a.activitycategory||"—"}</td>
-                    <td style={{padding:"9px 10px",color:"#555"}}>{a.assignedto||"—"}</td>
-                    <td style={{padding:"9px 10px",color:"#666",whiteSpace:"nowrap"}}>{a.activitydate||"—"}</td>
-                    <td style={{padding:"9px 10px",whiteSpace:"nowrap",color:a.duedate&&new Date(a.duedate)<new Date()&&a.activitystatus!=="Completed"?"#dc2626":"#444",fontWeight:a.duedate&&new Date(a.duedate)<new Date()&&a.activitystatus!=="Completed"?700:400}}>{a.duedate||"—"}</td>
-                    <td style={{padding:"9px 10px"}}><span style={{background:ACTIVITY_STATUS_C[a.activitystatus]||"#888",color:"#fff",padding:"2px 10px",borderRadius:20,fontSize:10,fontWeight:700,letterSpacing:0.5,whiteSpace:"nowrap"}}>{a.activitystatus||"—"}</span></td>
-                    <td style={{padding:"9px 10px",minWidth:80}}>
-                      {a.progress!=null&&a.progress!==0?<div style={{display:"flex",alignItems:"center",gap:6}}><div style={{flex:1,background:"#eee",borderRadius:4,height:6,overflow:"hidden"}}><div style={{width:`${Math.min(a.progress,100)}%`,height:"100%",background:a.progress>=90?"#3a9e5f":a.progress>=60?"#d97706":"#dc2626",borderRadius:4}}/></div><span style={{fontSize:10,fontWeight:700,color:"#555",whiteSpace:"nowrap"}}>{a.progress}%</span></div>:<span style={{color:"#ccc",fontSize:11}}>—</span>}
-                    </td>
-                    <td style={{padding:"9px 10px",whiteSpace:"nowrap"}}><button onClick={()=>{setAForm({...a});setActivityModal(a.id);}} style={EDIT_BTN}>✏️</button><button onClick={()=>setConfirmDelete({type:"activity",id:a.id,label:a.activityname||"this activity"})} style={DEL_BTN}>🗑️</button></td>
+                    <td style={{padding:"9px 14px",fontWeight:700,color:"#1a2a4a"}}>{a.activityname||"—"}</td>
+                    <td style={{padding:"9px 14px"}}>{a.projectstage?<StagePill stage={a.projectstage}/>:<span style={{color:"#ccc"}}>—</span>}</td>
+                    <td style={{padding:"9px 14px",color:"#555"}}>{a.activitycategory||"—"}</td>
+                    <td style={{padding:"9px 14px",whiteSpace:"nowrap"}}><button onClick={()=>{setAForm({...a});setActivityModal(a.id);}} style={EDIT_BTN}>✏️</button><button onClick={()=>setConfirmDelete({type:"activity",id:a.id,label:a.activityname||"this activity"})} style={DEL_BTN}>🗑️</button></td>
                   </tr>
                 ))}
-                {filteredActivities.length===0&&<tr><td colSpan={11} style={{padding:32,textAlign:"center",color:"#aaa",fontSize:12}}>No{activityFilter!=="All"?` "${activityFilter}"`:""} activities found. Click "+ Add Activity" to get started.</td></tr>}
+                {(activities||[]).length===0&&<tr><td colSpan={4} style={{padding:32,textAlign:"center",color:"#aaa",fontSize:12}}>No activities found. Click "+ Add Activity" to get started.</td></tr>}
               </tbody>
             </table>
           </div>
@@ -831,35 +807,10 @@ function App() {
       </Modal>}
 
       {activityModal!==null&&<Modal title={activityModal==="add"?"Add Activity":"Edit Activity"} onClose={()=>setActivityModal(null)} onSave={saveActivity}>
-        <div className="rsp-form-2col" style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
-          <div style={{gridColumn:"span 2"}}><label style={LBL}>Activity Name</label><input value={aForm.activityname||""} onChange={e=>setAForm(f=>({...f,activityname:e.target.value}))} style={INPUT} placeholder="Enter activity name"/></div>
-          <div><label style={LBL}>Activity Type</label><select value={aForm.activitytype||""} onChange={e=>setAForm(f=>({...f,activitytype:e.target.value}))} style={INPUT}><option value="">— Select —</option>{ACTIVITY_TYPES.map(t=><option key={t}>{t}</option>)}</select></div>
-          <div><label style={LBL}>Category</label><select value={aForm.activitycategory||""} onChange={e=>setAForm(f=>({...f,activitycategory:e.target.value}))} style={INPUT}><option value="">— Select —</option>{ACTIVITY_CATEGORIES.map(c=><option key={c}>{c}</option>)}</select></div>
-          <div><label style={LBL}>Status</label><select value={aForm.activitystatus||"Pending"} onChange={e=>setAForm(f=>({...f,activitystatus:e.target.value}))} style={INPUT}>{ACTIVITY_STATUSES.map(s=><option key={s}>{s}</option>)}</select></div>
-          <div><label style={LBL}>Phase</label><input value={aForm.phase||""} onChange={e=>setAForm(f=>({...f,phase:e.target.value}))} style={INPUT} placeholder="e.g. Phase 1"/></div>
-          <div><label style={LBL}>Project Name</label><select value={aForm.projectname||""} onChange={e=>setAForm(f=>({...f,projectname:e.target.value}))} style={INPUT}><option value="">— Select Project —</option>{projects.map(p=><option key={p.id} value={p.name}>{p.name}</option>)}</select></div>
-          <div><label style={LBL}>Project Stage</label><select value={aForm.projectstage||""} onChange={e=>setAForm(f=>({...f,projectstage:e.target.value}))} style={INPUT}><option value="">— Select —</option>{TASK_STAGES.map(s=><option key={s}>{s}</option>)}</select></div>
-          <div><label style={LBL}>Site Name</label><input value={aForm.sitename||""} onChange={e=>setAForm(f=>({...f,sitename:e.target.value}))} style={INPUT}/></div>
-          <div><label style={LBL}>Assigned To</label><select value={aForm.assignedto||""} onChange={e=>setAForm(f=>({...f,assignedto:e.target.value}))} style={INPUT}><option value="">— Select Member —</option>{team.map(m=><option key={m.id} value={m.name}>{m.name}</option>)}</select></div>
-          <div><label style={LBL}>Performed By</label><input value={aForm.performedby||""} onChange={e=>setAForm(f=>({...f,performedby:e.target.value}))} style={INPUT}/></div>
-          <div><label style={LBL}>Completed By</label><input value={aForm.completedby||""} onChange={e=>setAForm(f=>({...f,completedby:e.target.value}))} style={INPUT}/></div>
-          <div><label style={LBL}>Activity Date</label><input type="date" value={aForm.activitydate||""} onChange={e=>setAForm(f=>({...f,activitydate:e.target.value}))} style={INPUT}/></div>
-          <div><label style={LBL}>Start Date</label><input type="date" value={aForm.startdate||""} onChange={e=>setAForm(f=>({...f,startdate:e.target.value}))} style={INPUT}/></div>
-          <div><label style={LBL}>Due Date</label><input type="date" value={aForm.duedate||""} onChange={e=>setAForm(f=>({...f,duedate:e.target.value}))} style={INPUT}/></div>
-          <div><label style={LBL}>End Date</label><input type="date" value={aForm.enddate||""} onChange={e=>setAForm(f=>({...f,enddate:e.target.value}))} style={INPUT}/></div>
-          <div><label style={LBL}>Completion Date</label><input type="date" value={aForm.completiondate||""} onChange={e=>setAForm(f=>({...f,completiondate:e.target.value}))} style={INPUT}/></div>
-          <div><label style={LBL}>Progress (%)</label><input type="number" min={0} max={100} value={aForm.progress??0} onChange={e=>setAForm(f=>({...f,progress:Math.min(100,Math.max(0,Number(e.target.value)))}))} style={INPUT}/></div>
-          <div><label style={LBL}>Region</label><input value={aForm.region||""} onChange={e=>setAForm(f=>({...f,region:e.target.value}))} style={INPUT}/></div>
-          <div><label style={LBL}>Zone</label><input value={aForm.zone||""} onChange={e=>setAForm(f=>({...f,zone:e.target.value}))} style={INPUT}/></div>
-          <div><label style={LBL}>Community</label><input value={aForm.community||""} onChange={e=>setAForm(f=>({...f,community:e.target.value}))} style={INPUT}/></div>
-          <div><label style={LBL}>District</label><input value={aForm.district||""} onChange={e=>setAForm(f=>({...f,district:e.target.value}))} style={INPUT}/></div>
-          <div><label style={LBL}>Milestone</label><input value={aForm.milestone||""} onChange={e=>setAForm(f=>({...f,milestone:e.target.value}))} style={INPUT}/></div>
-          <div><label style={LBL}>Deliverable</label><input value={aForm.deliverable||""} onChange={e=>setAForm(f=>({...f,deliverable:e.target.value}))} style={INPUT}/></div>
-          <div><label style={LBL}>Budget (₦)</label><input type="number" value={aForm.budget??0} onChange={e=>setAForm(f=>({...f,budget:Number(e.target.value)}))} style={INPUT}/></div>
-          <div><label style={LBL}>Expenditure (₦)</label><input type="number" value={aForm.expenditure??0} onChange={e=>setAForm(f=>({...f,expenditure:Number(e.target.value)}))} style={INPUT}/></div>
-          <div style={{gridColumn:"span 2"}}><label style={LBL}>Description</label><textarea value={aForm.description||""} onChange={e=>setAForm(f=>({...f,description:e.target.value}))} style={{...INPUT,height:70,resize:"vertical"}}/></div>
-          <div style={{gridColumn:"span 2"}}><label style={LBL}>Activity Notes</label><textarea value={aForm.activitynotes||""} onChange={e=>setAForm(f=>({...f,activitynotes:e.target.value}))} style={{...INPUT,height:60,resize:"vertical"}}/></div>
-          <div style={{gridColumn:"span 2"}}><label style={LBL}>Remarks</label><textarea value={aForm.remarks||""} onChange={e=>setAForm(f=>({...f,remarks:e.target.value}))} style={{...INPUT,height:60,resize:"vertical"}}/></div>
+        <div style={{display:"flex",flexDirection:"column",gap:14}}>
+          <div><label style={LBL}>Activity Name</label><input value={aForm.activityname||""} onChange={e=>setAForm(f=>({...f,activityname:e.target.value}))} style={INPUT} placeholder="Enter activity name"/></div>
+          <div><label style={LBL}>Project Stage</label><select value={aForm.projectstage||""} onChange={e=>setAForm(f=>({...f,projectstage:e.target.value}))} style={INPUT}><option value="">— Select Stage —</option>{TASK_STAGES.map(s=><option key={s}>{s}</option>)}</select></div>
+          <div><label style={LBL}>Category</label><select value={aForm.activitycategory||""} onChange={e=>setAForm(f=>({...f,activitycategory:e.target.value}))} style={INPUT}><option value="">— Select Category —</option>{["Technical","PUE","ESG","Project Finance","Procurement","Legal"].map(c=><option key={c}>{c}</option>)}</select></div>
         </div>
       </Modal>}
 
