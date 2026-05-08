@@ -690,7 +690,7 @@ function App() {
         {/* ══ ACTIVITIES LOG ══ */}
         {tab === "activitieslog" && (<>
           <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}>
-            <SectionHeader label="ACTIVITIES LOG"/>
+            <SectionHeader label="ACTIVITIES"/>
             <button onClick={()=>{setAForm(blankActivity());setActivityModal("add");}} style={{background:"#e07b39",color:"#fff",border:"none",borderRadius:8,padding:"8px 18px",cursor:"pointer",fontWeight:700,fontSize:12}}>+ Add Activity</button>
           </div>
           <div style={{background:"#fff",borderRadius:10,overflowX:"auto",boxShadow:"0 2px 8px rgba(0,0,0,0.07)"}}>
@@ -795,7 +795,7 @@ function App() {
 
       {taskModal!==null&&<Modal title={taskModal==="add"?"Add Task":"Edit Task"} onClose={()=>setTaskModal(null)} onSave={saveTask}>
         <div className="rsp-form-2col" style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
-          <div style={{gridColumn:"span 2"}}><label style={LBL}>Activity Name</label><input value={tForm.activityname||""} onChange={e=>setTForm(f=>({...f,activityname:e.target.value}))} style={INPUT} placeholder="Enter activity name"/></div>
+          <div style={{gridColumn:"span 2"}}><label style={LBL}>Activity Name</label><select value={tForm.activityname||""} onChange={e=>setTForm(f=>({...f,activityname:e.target.value}))} style={INPUT}><option value="">— Select Activity —</option>{(activities||[]).map(a=><option key={a.id} value={a.activityname}>{a.activityname}</option>)}</select></div>
           <div><label style={LBL}>Project</label><select value={tForm.project||""} onChange={e=>setTForm(f=>({...f,project:e.target.value}))} style={INPUT}><option value="">— Select Project —</option>{projects.map(p=><option key={p.id} value={p.name}>{p.name}</option>)}</select></div>
           <div><label style={LBL}>Project Stage</label><select value={tForm.projectstage||TASK_STAGES[0]} onChange={e=>setTForm(f=>({...f,projectstage:e.target.value}))} style={INPUT}>{TASK_STAGES.map(s=><option key={s}>{s}</option>)}</select></div>
           <div><label style={LBL}>Vertical</label><select value={tForm.vertical||TASK_VERTICALS[0]} onChange={e=>setTForm(f=>({...f,vertical:e.target.value}))} style={INPUT}>{TASK_VERTICALS.map(v=><option key={v}>{v}</option>)}</select></div>
