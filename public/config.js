@@ -1,4 +1,4 @@
 window.ISOLATED_MINIGRID_CONFIG = {
-  SUPABASE_URL: "https://dpyfuuqcammdjlazeqyo.supabase.co",
-  SUPABASE_ANON_KEY: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRweWZ1dXFjYW1tZGpsYXplcXlvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgxNjM1NDcsImV4cCI6MjA5MzczOTU0N30.fe8xoHygAHRp_yWWshYVlAar4BgDGFvzJRrdwRv8_F4",
+  SUPABASE_URL: "",
+  SUPABASE_ANON_KEY: "",
 };

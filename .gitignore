@@ -6,3 +6,4 @@ npm-debug.log*
 supabase/config.toml
 
 .vercel
+public/config.js
