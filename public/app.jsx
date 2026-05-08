@@ -33,7 +33,7 @@ const DB_TABLES = {
   },
   activities: {
     name: "activities",
-    columns: ["id","activityname","activitytype","activitycategory","phase","projectname","projectstage","sitename","assignedto","performedby","completedby","createdby","teamname","activitydate","startdate","enddate","duedate","completiondate","activitystatus","status","progress","percentage","description","activitynotes","activitycomments","remarks","region","zone","community","district","milestone","deliverable","budget","expenditure"],
+    columns: ["id","activityname","activitycategory","projectstage"],
   },
 };
 
@@ -90,7 +90,7 @@ function defaultRow(table, row) {
   }
 
   if (table === "activities") {
-    return { id: row.id, activityname: "", activitytype: "", activitycategory: "", phase: "", projectname: "", projectstage: "", sitename: "", assignedto: "", performedby: "", completedby: "", createdby: "", teamname: "", activitydate: "", startdate: "", enddate: "", duedate: "", completiondate: "", activitystatus: "Pending", status: "", progress: 0, percentage: 0, description: "", activitynotes: "", activitycomments: "", remarks: "", region: "", zone: "", community: "", district: "", milestone: "", deliverable: "", budget: 0, expenditure: 0 };
+    return { id: row.id, activityname: "", activitycategory: "", projectstage: "" };
   }
 
   return {
@@ -350,7 +350,7 @@ function App() {
   const blankSite = () => ({ id: Date.now(), sitename: "", project: "", state: "", LGA: "", connections: 0, PV: 0 });
   const blankMember = () => ({ id: Date.now(), name: "", role: ROLES[0], assigned: 0, tasksDue: 0, overdue: 0, compliance: 100, rag: "Green" });
   const blankTask = () => ({ id: Date.now(), activityname: "", project: "", projectstage: TASK_STAGES[0], vertical: TASK_VERTICALS[0], assignedTo: "", startDate: "", dueDate: "", status: "Pending" });
-  const blankActivity = () => ({ id: Date.now(), activityname: "", activitytype: ACTIVITY_TYPES[0], activitycategory: ACTIVITY_CATEGORIES[0], phase: "", projectname: "", projectstage: TASK_STAGES[0], sitename: "", assignedto: "", performedby: "", completedby: "", createdby: "", teamname: "", activitydate: today(), startdate: "", enddate: "", duedate: "", completiondate: "", activitystatus: "Pending", status: "", progress: 0, percentage: 0, description: "", activitynotes: "", activitycomments: "", remarks: "", region: "", zone: "", community: "", district: "", milestone: "", deliverable: "", budget: 0, expenditure: 0 });
+  const blankActivity = () => ({ id: Date.now(), activityname: "", activitycategory: "", projectstage: "" });
 
   const [pForm, setPForm] = useState(blankProject());
   const [iForm, setIForm] = useState(blankIssue());
