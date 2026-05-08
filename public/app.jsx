@@ -31,6 +31,10 @@ const DB_TABLES = {
     name: "tasks",
     columns: ["id", "activityname", "project", "projectstage", "vertical", "assignedTo", "startDate", "dueDate", "status"],
   },
+  activities: {
+    name: "activities",
+    columns: ["id","activityname","activitytype","activitycategory","phase","projectname","projectstage","sitename","assignedto","performedby","completedby","createdby","teamname","activitydate","startdate","enddate","duedate","completiondate","activitystatus","status","progress","percentage","description","activitynotes","activitycomments","remarks","region","zone","community","district","milestone","deliverable","budget","expenditure"],
+  },
 };
 
 function pickColumns(row, columns) {
@@ -83,6 +87,10 @@ function defaultRow(table, row) {
 
   if (table === "tasks") {
     return { id: row.id, activityname: "", project: "", projectstage: "Preliminary Assessment", vertical: "Technical", assignedTo: "", startDate: "", dueDate: "", status: "Pending" };
+  }
+
+  if (table === "activities") {
+    return { id: row.id, activityname: "", activitytype: "", activitycategory: "", phase: "", projectname: "", projectstage: "", sitename: "", assignedto: "", performedby: "", completedby: "", createdby: "", teamname: "", activitydate: "", startdate: "", enddate: "", duedate: "", completiondate: "", activitystatus: "Pending", status: "", progress: 0, percentage: 0, description: "", activitynotes: "", activitycomments: "", remarks: "", region: "", zone: "", community: "", district: "", milestone: "", deliverable: "", budget: 0, expenditure: 0 };
   }
 
   return {
@@ -183,7 +191,7 @@ const STAGES_META = [
 const STAGES_LIST = ["Preliminary Assessment", "Project Preparation", "Project Development", "Project Finance", "Financial Close"];
 const ISSUE_CATS = ["Commercial", "Financial Model", "Technical", "Legal", "Deployment", "Governance", "Other"];
 const ISSUE_STATUSES = ["Open", "In Progress", "Escalated", "Resolved"];
-const ROLES = ["Cluster Lead", "Technical Analyst", "Technical Associate", "ESG Associate", "Legal Associate", "Legal Manager", "PUE Associate", "Project Finance Analyst", "Project Finance Associate"];
+const ROLES = ["Cluster Lead", "Technical Analyst", "Technical Associate", "ESG Associate", "Legal Associate", "Legal Manager", "PUE Associate", "Project Finance Analyst", "Project Finance Associate", "Procurement"];
 const RAG_C = { Green: "#3a9e5f", Amber: "#d97706", Red: "#dc2626" };
 const RAG_LIGHT = { Green: "#d4edda", Amber: "#fef3cd", Red: "#f8d7da" };
 
@@ -201,8 +209,12 @@ const TASK_STATUSES = ["Pending", "In Progress", "Completed", "Overdue"];
 const TASK_STAGES = ["Preliminary Assessment", "Project Preparation", "Project Development", "Project Finance"];
 const TASK_VERTICALS = ["Technical", "PUE", "ESG", "Legal", "Procurement"];
 const TASK_STATUS_C = { "Pending": "#6b7280", "In Progress": "#3b6cb7", "Completed": "#3a9e5f", "Overdue": "#dc2626" };
+const ACTIVITY_TYPES = ["Site Assessment","Design & Engineering","Procurement","Construction","Testing & Commissioning","Community Engagement","Legal & Regulatory","Financial","Reporting","O&M","Other"];
+const ACTIVITY_CATEGORIES = ["Technical","Commercial","Financial","Legal","ESG","Deployment","Governance","Community","Other"];
+const ACTIVITY_STATUSES = ["Pending","In Progress","Completed","Overdue","Cancelled"];
+const ACTIVITY_STATUS_C = { "Pending": "#6b7280", "In Progress": "#3b6cb7", "Completed": "#3a9e5f", "Overdue": "#dc2626", "Cancelled": "#9ca3af" };
 
-const TABS = [{ id: "pipeline", label: "Pipeline Manager" }, { id: "kpi", label: "KPI Dashboard" }, { id: "deployment", label: "Deployment Tracker" }, { id: "team", label: "Team Performance" }, { id: "issues", label: "Management Support" }, { id: "activities", label: "Task(s)" }];
+const TABS = [{ id: "pipeline", label: "Pipeline Manager" }, { id: "kpi", label: "KPI Dashboard" }, { id: "deployment", label: "Deployment Tracker" }, { id: "team", label: "Team Performance" }, { id: "issues", label: "Management Support" }, { id: "activities", label: "Task(s)" }, { id: "activitieslog", label: "Activities" }];
 
 // ─── DB HOOK ──────────────────────────────────────────────────────────────────
 function useSupabaseTable(table, seed) {
@@ -308,9 +320,10 @@ function App() {
   const [issues, setIssues, issuesLoading, issuesErr] = useSupabaseTable("issues", SEED_ISSUES);
   const [deployment, setDeployment, deployLoading, deployErr] = useSupabaseTable("deployment", SEED_DEPLOYMENT);
   const [tasks, setTasks, tasksLoading, tasksErr] = useSupabaseTable("tasks", []);
+  const [activities, setActivities, activitiesLoading, activitiesErr] = useSupabaseTable("activities", []);
 
-  const loading = projLoading || teamLoading || issuesLoading || deployLoading || tasksLoading;
-  const dbError = projErr || teamErr || issuesErr || deployErr || tasksErr;
+  const loading = projLoading || teamLoading || issuesLoading || deployLoading || tasksLoading || activitiesLoading;
+  const dbError = projErr || teamErr || issuesErr || deployErr || tasksErr || activitiesErr;
 
   const [tab, setTab] = useState("pipeline");
   const [viewMode, setViewMode] = useState("list");
@@ -328,18 +341,23 @@ function App() {
   const [siteModal, setSiteModal] = useState(null);
   const [teamModal, setTeamModal] = useState(null);
   const [taskModal, setTaskModal] = useState(null);
+  const [activityModal, setActivityModal] = useState(null);
+  const [activityFilter, setActivityFilter] = useState("All");
+  const [activityProjectFilter, setActivityProjectFilter] = useState("All");
 
   const blankProject = () => ({ id: Date.now(), name: "", developer: "", state: "", stage: STAGES_LIST[0], clusterLead: "", rag: "Green", loi: false, jda: false, credit: false, fc: false, size: 0, connections: 0, pvCapacity: 0, startDate: "", targetCompletion: "", actualCompletion: "", subsidyExpected: 0, capexPerConn: 0, duration: 0, issue: "", lastUpdate: today(), targetClose: "", updateCompliance: 100, evidenceCompliance: 100, jdacost: 0 });
   const blankIssue = () => ({ id: Date.now(), project: "", category: ISSUE_CATS[0], description: "", owner: "", raised: today(), due: "", status: "Open", rag: "Amber" });
   const blankSite = () => ({ id: Date.now(), sitename: "", project: "", state: "", LGA: "", connections: 0, PV: 0 });
   const blankMember = () => ({ id: Date.now(), name: "", role: ROLES[0], assigned: 0, tasksDue: 0, overdue: 0, compliance: 100, rag: "Green" });
   const blankTask = () => ({ id: Date.now(), activityname: "", project: "", projectstage: TASK_STAGES[0], vertical: TASK_VERTICALS[0], assignedTo: "", startDate: "", dueDate: "", status: "Pending" });
+  const blankActivity = () => ({ id: Date.now(), activityname: "", activitytype: ACTIVITY_TYPES[0], activitycategory: ACTIVITY_CATEGORIES[0], phase: "", projectname: "", projectstage: TASK_STAGES[0], sitename: "", assignedto: "", performedby: "", completedby: "", createdby: "", teamname: "", activitydate: today(), startdate: "", enddate: "", duedate: "", completiondate: "", activitystatus: "Pending", status: "", progress: 0, percentage: 0, description: "", activitynotes: "", activitycomments: "", remarks: "", region: "", zone: "", community: "", district: "", milestone: "", deliverable: "", budget: 0, expenditure: 0 });
 
   const [pForm, setPForm] = useState(blankProject());
   const [iForm, setIForm] = useState(blankIssue());
   const [sForm, setSForm] = useState(blankSite());
   const [mForm, setMForm] = useState(blankMember());
   const [tForm, setTForm] = useState(blankTask());
+  const [aForm, setAForm] = useState(blankActivity());
 
   const flash = () => { setSaving(true); setTimeout(() => { setSaving(false); setLastSaved(new Date().toLocaleTimeString("en-NG", { hour: "2-digit", minute: "2-digit" })); }, 900); };
 
@@ -373,6 +391,7 @@ function App() {
   const filteredProjects = filterStage === "All" ? projects : projects.filter(p => p.stage === filterStage);
   const filteredTasks = tasks.filter(t => (taskFilter === "All" || t.status === taskFilter) && (taskProjectFilter === "All" || t.project === taskProjectFilter));
   const filteredDeployment = deployProjectFilter === "All" ? deployment : deployment.filter(d => d.project === deployProjectFilter);
+  const filteredActivities = (activities || []).filter(a => (activityFilter === "All" || a.activitystatus === activityFilter) && (activityProjectFilter === "All" || a.projectname === activityProjectFilter));
   const openIssues = issues.filter(i => i.status !== "Resolved").length;
 
   const saveProject = () => { if (!pForm.name.trim()) return alert("Project name is required"); const duration = countWorkingDays(pForm.startDate, pForm.actualCompletion || today()); const projectToSave = { ...pForm, duration }; projectModal === "add" ? setProjects(ps => [...ps, { ...projectToSave, id: Date.now() }]) : setProjects(ps => ps.map(p => p.id === projectModal ? { ...projectToSave } : p)); flash(); setProjectModal(null); };
@@ -381,7 +400,8 @@ function App() {
   const saveSite = () => { if (!sForm.sitename.trim()) return alert("Site name is required"); siteModal === "add" ? setDeployment(ds => [...ds, { ...sForm, id: Date.now() }]) : setDeployment(ds => ds.map(d => d.id === siteModal ? { ...sForm } : d)); flash(); setSiteModal(null); };
   const saveMember = () => { if (!mForm.name.trim()) return alert("Name is required"); teamModal === "add" ? setTeam(ts => [...ts, { ...mForm, id: Date.now() }]) : setTeam(ts => ts.map(t => t.id === teamModal ? { ...mForm } : t)); flash(); setTeamModal(null); };
   const saveTask = () => { if (!tForm.activityname.trim()) return alert("Activity name is required"); taskModal === "add" ? setTasks(ts => [...ts, { ...tForm, id: Date.now() }]) : setTasks(ts => ts.map(t => t.id === taskModal ? { ...tForm } : t)); flash(); setTaskModal(null); };
-  const executeDelete = () => { const { type, id } = confirmDelete; if (type === "project") setProjects(ps => ps.filter(p => p.id !== id)); if (type === "issue") setIssues(is => is.filter(i => i.id !== id)); if (type === "site") setDeployment(ds => ds.filter(d => d.id !== id)); if (type === "member") setTeam(ts => ts.filter(t => t.id !== id)); if (type === "task") setTasks(ts => ts.filter(t => t.id !== id)); flash(); setConfirmDelete(null); };
+  const saveActivity = () => { if (!aForm.activityname.trim()) return alert("Activity name is required"); activityModal === "add" ? setActivities(as => [...as, { ...aForm, id: Date.now() }]) : setActivities(as => as.map(a => a.id === activityModal ? { ...aForm } : a)); flash(); setActivityModal(null); };
+  const executeDelete = () => { const { type, id } = confirmDelete; if (type === "project") setProjects(ps => ps.filter(p => p.id !== id)); if (type === "issue") setIssues(is => is.filter(i => i.id !== id)); if (type === "site") setDeployment(ds => ds.filter(d => d.id !== id)); if (type === "member") setTeam(ts => ts.filter(t => t.id !== id)); if (type === "task") setTasks(ts => ts.filter(t => t.id !== id)); if (type === "activity") setActivities(as => as.filter(a => a.id !== id)); flash(); setConfirmDelete(null); };
 
   return (
     <div style={{ minHeight: "100vh", background: "#f2f4f7", fontFamily: "'Barlow','Segoe UI',sans-serif", color: "#1a1a2e" }}>
@@ -667,10 +687,58 @@ function App() {
           </div>
         </>)}
 
-        {/* ══ ACTIVITIES ══ */}
+        {/* ══ ACTIVITIES LOG ══ */}
+        {tab === "activitieslog" && (<>
+          <div className="rsp-filter-bar" style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}>
+            <SectionHeader label="ACTIVITIES LOG"/>
+            <div style={{display:"flex",gap:8,alignItems:"center"}}>
+              <select value={activityProjectFilter} onChange={e=>setActivityProjectFilter(e.target.value)} style={{...INPUT,width:220,fontSize:12}}>
+                <option value="All">All Projects</option>
+                {projects.map(p=><option key={p.id} value={p.name}>{p.name}</option>)}
+              </select>
+              <button onClick={()=>{setAForm(blankActivity());setActivityModal("add");}} style={{background:"#e07b39",color:"#fff",border:"none",borderRadius:8,padding:"8px 18px",cursor:"pointer",fontWeight:700,fontSize:12}}>+ Add Activity</button>
+            </div>
+          </div>
+          <div className="rsp-cards-5" style={{display:"grid",gridTemplateColumns:"repeat(5,1fr)",gap:12,marginBottom:22}}>
+            {[["All",(activities||[]).length,"#1a2a4a"],["Pending",(activities||[]).filter(a=>a.activitystatus==="Pending").length,"#6b7280"],["In Progress",(activities||[]).filter(a=>a.activitystatus==="In Progress").length,"#3b6cb7"],["Completed",(activities||[]).filter(a=>a.activitystatus==="Completed").length,"#3a9e5f"],["Overdue",(activities||[]).filter(a=>a.activitystatus==="Overdue").length,"#dc2626"]].map(([label,count,color])=>(
+              <div key={label} onClick={()=>setActivityFilter(label)} style={{background:"#fff",borderRadius:10,padding:"16px 18px",boxShadow:"0 2px 8px rgba(0,0,0,0.07)",borderTop:`3px solid ${color}`,cursor:"pointer",transition:"all 0.15s",outline:activityFilter===label?`2px solid ${color}`:"2px solid transparent",outlineOffset:2}}>
+                <div style={{fontSize:9,color:"#aaa",fontWeight:800,letterSpacing:1,marginBottom:6}}>{label.toUpperCase()}</div>
+                <div style={{fontSize:30,fontWeight:900,color:color,lineHeight:1}}>{count}</div>
+                <div style={{fontSize:10,color:"#888",marginTop:4}}>activit{count!==1?"ies":"y"}</div>
+              </div>
+            ))}
+          </div>
+          <div style={{background:"#fff",borderRadius:10,overflowX:"auto",boxShadow:"0 2px 8px rgba(0,0,0,0.07)"}}>
+            <table style={{width:"100%",borderCollapse:"collapse",fontSize:12}}>
+              <thead><tr style={{background:"#1a2a4a",color:"#fff"}}>{["ACTIVITY","PROJECT","SITE","TYPE","CATEGORY","ASSIGNED TO","DATE","DUE DATE","STATUS","PROGRESS",""].map(h=><th key={h} style={{padding:"10px 10px",textAlign:"left",fontSize:9,fontWeight:800,letterSpacing:0.7,whiteSpace:"nowrap"}}>{h}</th>)}</tr></thead>
+              <tbody>
+                {filteredActivities.map((a,i)=>(
+                  <tr key={a.id} style={{background:i%2===0?"#f7f9fc":"#fff",borderBottom:"1px solid #eef"}}>
+                    <td style={{padding:"9px 10px",fontWeight:700,color:"#1a2a4a",maxWidth:160}}>{a.activityname||"—"}</td>
+                    <td style={{padding:"9px 10px",color:"#555",fontSize:11,maxWidth:140}}>{a.projectname||"—"}</td>
+                    <td style={{padding:"9px 10px",color:"#666",fontSize:11}}>{a.sitename||"—"}</td>
+                    <td style={{padding:"9px 10px",color:"#555",fontSize:11}}>{a.activitytype||"—"}</td>
+                    <td style={{padding:"9px 10px",color:"#555",fontSize:11}}>{a.activitycategory||"—"}</td>
+                    <td style={{padding:"9px 10px",color:"#555"}}>{a.assignedto||"—"}</td>
+                    <td style={{padding:"9px 10px",color:"#666",whiteSpace:"nowrap"}}>{a.activitydate||"—"}</td>
+                    <td style={{padding:"9px 10px",whiteSpace:"nowrap",color:a.duedate&&new Date(a.duedate)<new Date()&&a.activitystatus!=="Completed"?"#dc2626":"#444",fontWeight:a.duedate&&new Date(a.duedate)<new Date()&&a.activitystatus!=="Completed"?700:400}}>{a.duedate||"—"}</td>
+                    <td style={{padding:"9px 10px"}}><span style={{background:ACTIVITY_STATUS_C[a.activitystatus]||"#888",color:"#fff",padding:"2px 10px",borderRadius:20,fontSize:10,fontWeight:700,letterSpacing:0.5,whiteSpace:"nowrap"}}>{a.activitystatus||"—"}</span></td>
+                    <td style={{padding:"9px 10px",minWidth:80}}>
+                      {a.progress!=null&&a.progress!==0?<div style={{display:"flex",alignItems:"center",gap:6}}><div style={{flex:1,background:"#eee",borderRadius:4,height:6,overflow:"hidden"}}><div style={{width:`${Math.min(a.progress,100)}%`,height:"100%",background:a.progress>=90?"#3a9e5f":a.progress>=60?"#d97706":"#dc2626",borderRadius:4}}/></div><span style={{fontSize:10,fontWeight:700,color:"#555",whiteSpace:"nowrap"}}>{a.progress}%</span></div>:<span style={{color:"#ccc",fontSize:11}}>—</span>}
+                    </td>
+                    <td style={{padding:"9px 10px",whiteSpace:"nowrap"}}><button onClick={()=>{setAForm({...a});setActivityModal(a.id);}} style={EDIT_BTN}>✏️</button><button onClick={()=>setConfirmDelete({type:"activity",id:a.id,label:a.activityname||"this activity"})} style={DEL_BTN}>🗑️</button></td>
+                  </tr>
+                ))}
+                {filteredActivities.length===0&&<tr><td colSpan={11} style={{padding:32,textAlign:"center",color:"#aaa",fontSize:12}}>No{activityFilter!=="All"?` "${activityFilter}"`:""} activities found. Click "+ Add Activity" to get started.</td></tr>}
+              </tbody>
+            </table>
+          </div>
+        </>)}
+
+        {/* ══ TASKS (formerly Activities) ══ */}
         {tab === "activities" && (<>
           <div className="rsp-filter-bar" style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}>
-            <SectionHeader label="ACTIVITIES"/>
+            <SectionHeader label="TASK(S)"/>
             <div style={{display:"flex",gap:8,alignItems:"center"}}>
               <select value={taskProjectFilter} onChange={e=>setTaskProjectFilter(e.target.value)} style={{...INPUT,width:220,fontSize:12}}>
                 <option value="All">All Projects</option>
@@ -759,6 +827,39 @@ function App() {
           <div><label style={LBL}>Start Date</label><input type="date" value={tForm.startDate||""} onChange={e=>setTForm(f=>({...f,startDate:e.target.value}))} style={INPUT}/></div>
           <div><label style={LBL}>Due Date</label><input type="date" value={tForm.dueDate||""} onChange={e=>{const d=e.target.value;setTForm(f=>({...f,dueDate:d,status:f.status==="Overdue"&&d>=today()?"In Progress":f.status}));}} style={INPUT}/></div>
           <div><label style={LBL}>Status</label><select value={tForm.status||"Pending"} onChange={e=>setTForm(f=>({...f,status:e.target.value}))} style={INPUT}>{TASK_STATUSES.map(s=><option key={s}>{s}</option>)}</select></div>
+        </div>
+      </Modal>}
+
+      {activityModal!==null&&<Modal title={activityModal==="add"?"Add Activity":"Edit Activity"} onClose={()=>setActivityModal(null)} onSave={saveActivity}>
+        <div className="rsp-form-2col" style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
+          <div style={{gridColumn:"span 2"}}><label style={LBL}>Activity Name</label><input value={aForm.activityname||""} onChange={e=>setAForm(f=>({...f,activityname:e.target.value}))} style={INPUT} placeholder="Enter activity name"/></div>
+          <div><label style={LBL}>Activity Type</label><select value={aForm.activitytype||""} onChange={e=>setAForm(f=>({...f,activitytype:e.target.value}))} style={INPUT}><option value="">— Select —</option>{ACTIVITY_TYPES.map(t=><option key={t}>{t}</option>)}</select></div>
+          <div><label style={LBL}>Category</label><select value={aForm.activitycategory||""} onChange={e=>setAForm(f=>({...f,activitycategory:e.target.value}))} style={INPUT}><option value="">— Select —</option>{ACTIVITY_CATEGORIES.map(c=><option key={c}>{c}</option>)}</select></div>
+          <div><label style={LBL}>Status</label><select value={aForm.activitystatus||"Pending"} onChange={e=>setAForm(f=>({...f,activitystatus:e.target.value}))} style={INPUT}>{ACTIVITY_STATUSES.map(s=><option key={s}>{s}</option>)}</select></div>
+          <div><label style={LBL}>Phase</label><input value={aForm.phase||""} onChange={e=>setAForm(f=>({...f,phase:e.target.value}))} style={INPUT} placeholder="e.g. Phase 1"/></div>
+          <div><label style={LBL}>Project Name</label><select value={aForm.projectname||""} onChange={e=>setAForm(f=>({...f,projectname:e.target.value}))} style={INPUT}><option value="">— Select Project —</option>{projects.map(p=><option key={p.id} value={p.name}>{p.name}</option>)}</select></div>
+          <div><label style={LBL}>Project Stage</label><select value={aForm.projectstage||""} onChange={e=>setAForm(f=>({...f,projectstage:e.target.value}))} style={INPUT}><option value="">— Select —</option>{TASK_STAGES.map(s=><option key={s}>{s}</option>)}</select></div>
+          <div><label style={LBL}>Site Name</label><input value={aForm.sitename||""} onChange={e=>setAForm(f=>({...f,sitename:e.target.value}))} style={INPUT}/></div>
+          <div><label style={LBL}>Assigned To</label><select value={aForm.assignedto||""} onChange={e=>setAForm(f=>({...f,assignedto:e.target.value}))} style={INPUT}><option value="">— Select Member —</option>{team.map(m=><option key={m.id} value={m.name}>{m.name}</option>)}</select></div>
+          <div><label style={LBL}>Performed By</label><input value={aForm.performedby||""} onChange={e=>setAForm(f=>({...f,performedby:e.target.value}))} style={INPUT}/></div>
+          <div><label style={LBL}>Completed By</label><input value={aForm.completedby||""} onChange={e=>setAForm(f=>({...f,completedby:e.target.value}))} style={INPUT}/></div>
+          <div><label style={LBL}>Activity Date</label><input type="date" value={aForm.activitydate||""} onChange={e=>setAForm(f=>({...f,activitydate:e.target.value}))} style={INPUT}/></div>
+          <div><label style={LBL}>Start Date</label><input type="date" value={aForm.startdate||""} onChange={e=>setAForm(f=>({...f,startdate:e.target.value}))} style={INPUT}/></div>
+          <div><label style={LBL}>Due Date</label><input type="date" value={aForm.duedate||""} onChange={e=>setAForm(f=>({...f,duedate:e.target.value}))} style={INPUT}/></div>
+          <div><label style={LBL}>End Date</label><input type="date" value={aForm.enddate||""} onChange={e=>setAForm(f=>({...f,enddate:e.target.value}))} style={INPUT}/></div>
+          <div><label style={LBL}>Completion Date</label><input type="date" value={aForm.completiondate||""} onChange={e=>setAForm(f=>({...f,completiondate:e.target.value}))} style={INPUT}/></div>
+          <div><label style={LBL}>Progress (%)</label><input type="number" min={0} max={100} value={aForm.progress??0} onChange={e=>setAForm(f=>({...f,progress:Math.min(100,Math.max(0,Number(e.target.value)))}))} style={INPUT}/></div>
+          <div><label style={LBL}>Region</label><input value={aForm.region||""} onChange={e=>setAForm(f=>({...f,region:e.target.value}))} style={INPUT}/></div>
+          <div><label style={LBL}>Zone</label><input value={aForm.zone||""} onChange={e=>setAForm(f=>({...f,zone:e.target.value}))} style={INPUT}/></div>
+          <div><label style={LBL}>Community</label><input value={aForm.community||""} onChange={e=>setAForm(f=>({...f,community:e.target.value}))} style={INPUT}/></div>
+          <div><label style={LBL}>District</label><input value={aForm.district||""} onChange={e=>setAForm(f=>({...f,district:e.target.value}))} style={INPUT}/></div>
+          <div><label style={LBL}>Milestone</label><input value={aForm.milestone||""} onChange={e=>setAForm(f=>({...f,milestone:e.target.value}))} style={INPUT}/></div>
+          <div><label style={LBL}>Deliverable</label><input value={aForm.deliverable||""} onChange={e=>setAForm(f=>({...f,deliverable:e.target.value}))} style={INPUT}/></div>
+          <div><label style={LBL}>Budget (₦)</label><input type="number" value={aForm.budget??0} onChange={e=>setAForm(f=>({...f,budget:Number(e.target.value)}))} style={INPUT}/></div>
+          <div><label style={LBL}>Expenditure (₦)</label><input type="number" value={aForm.expenditure??0} onChange={e=>setAForm(f=>({...f,expenditure:Number(e.target.value)}))} style={INPUT}/></div>
+          <div style={{gridColumn:"span 2"}}><label style={LBL}>Description</label><textarea value={aForm.description||""} onChange={e=>setAForm(f=>({...f,description:e.target.value}))} style={{...INPUT,height:70,resize:"vertical"}}/></div>
+          <div style={{gridColumn:"span 2"}}><label style={LBL}>Activity Notes</label><textarea value={aForm.activitynotes||""} onChange={e=>setAForm(f=>({...f,activitynotes:e.target.value}))} style={{...INPUT,height:60,resize:"vertical"}}/></div>
+          <div style={{gridColumn:"span 2"}}><label style={LBL}>Remarks</label><textarea value={aForm.remarks||""} onChange={e=>setAForm(f=>({...f,remarks:e.target.value}))} style={{...INPUT,height:60,resize:"vertical"}}/></div>
         </div>
       </Modal>}
 
