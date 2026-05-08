@@ -794,16 +794,21 @@ function App() {
       </Modal>}
 
       {taskModal!==null&&<Modal title={taskModal==="add"?"Add Task":"Edit Task"} onClose={()=>setTaskModal(null)} onSave={saveTask}>
-        <div className="rsp-form-2col" style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
-          <div style={{gridColumn:"span 2"}}><label style={LBL}>Activity Name</label><select value={tForm.activityname||""} onChange={e=>setTForm(f=>({...f,activityname:e.target.value}))} style={INPUT}><option value="">— Select Activity —</option>{(activities||[]).map(a=><option key={a.id} value={a.activityname}>{a.activityname}</option>)}</select></div>
-          <div><label style={LBL}>Project</label><select value={tForm.project||""} onChange={e=>setTForm(f=>({...f,project:e.target.value}))} style={INPUT}><option value="">— Select Project —</option>{projects.map(p=><option key={p.id} value={p.name}>{p.name}</option>)}</select></div>
-          <div><label style={LBL}>Project Stage</label><select value={tForm.projectstage||TASK_STAGES[0]} onChange={e=>setTForm(f=>({...f,projectstage:e.target.value}))} style={INPUT}>{TASK_STAGES.map(s=><option key={s}>{s}</option>)}</select></div>
-          <div><label style={LBL}>Vertical</label><select value={tForm.vertical||TASK_VERTICALS[0]} onChange={e=>setTForm(f=>({...f,vertical:e.target.value}))} style={INPUT}>{TASK_VERTICALS.map(v=><option key={v}>{v}</option>)}</select></div>
-          <div><label style={LBL}>Assigned To</label><select value={tForm.assignedTo||""} onChange={e=>setTForm(f=>({...f,assignedTo:e.target.value}))} style={INPUT}><option value="">— Select Member —</option>{team.map(m=><option key={m.id} value={m.name}>{m.name}</option>)}</select></div>
-          <div><label style={LBL}>Start Date</label><input type="date" value={tForm.startDate||""} onChange={e=>setTForm(f=>({...f,startDate:e.target.value}))} style={INPUT}/></div>
-          <div><label style={LBL}>Due Date</label><input type="date" value={tForm.dueDate||""} onChange={e=>{const d=e.target.value;setTForm(f=>({...f,dueDate:d,status:f.status==="Overdue"&&d>=today()?"In Progress":f.status}));}} style={INPUT}/></div>
-          <div><label style={LBL}>Status</label><select value={tForm.status||"Pending"} onChange={e=>setTForm(f=>({...f,status:e.target.value}))} style={INPUT}>{TASK_STATUSES.map(s=><option key={s}>{s}</option>)}</select></div>
-        </div>
+        {(() => {
+          const selectedActivity = (activities||[]).find(a => a.activityname === tForm.activityname);
+          return (
+            <div className="rsp-form-2col" style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
+              <div style={{gridColumn:"span 2"}}><label style={LBL}>Activity Name</label><select value={tForm.activityname||""} onChange={e=>{const activity = (activities||[]).find(a => a.activityname === e.target.value); setTForm(f=>({...f,activityname:e.target.value,projectstage:activity?.projectstage||"",vertical:activity?.activitycategory||""}));}} style={INPUT}><option value="">— Select Activity —</option>{(activities||[]).map(a=><option key={a.id} value={a.activityname}>{a.activityname}</option>)}</select></div>
+              <div><label style={LBL}>Project</label><select value={tForm.project||""} onChange={e=>setTForm(f=>({...f,project:e.target.value}))} style={INPUT}><option value="">— Select Project —</option>{projects.map(p=><option key={p.id} value={p.name}>{p.name}</option>)}</select></div>
+              <div><label style={LBL}>Project Stage</label><input type="text" value={selectedActivity?.projectstage||""} disabled style={{...INPUT,backgroundColor:"#f5f5f5",color:"#666",cursor:"not-allowed"}}/></div>
+              <div><label style={LBL}>Vertical</label><input type="text" value={selectedActivity?.activitycategory||""} disabled style={{...INPUT,backgroundColor:"#f5f5f5",color:"#666",cursor:"not-allowed"}}/></div>
+              <div><label style={LBL}>Assigned To</label><select value={tForm.assignedTo||""} onChange={e=>setTForm(f=>({...f,assignedTo:e.target.value}))} style={INPUT}><option value="">— Select Member —</option>{team.map(m=><option key={m.id} value={m.name}>{m.name}</option>)}</select></div>
+              <div><label style={LBL}>Start Date</label><input type="date" value={tForm.startDate||""} onChange={e=>setTForm(f=>({...f,startDate:e.target.value}))} style={INPUT}/></div>
+              <div><label style={LBL}>Due Date</label><input type="date" value={tForm.dueDate||""} onChange={e=>{const d=e.target.value;setTForm(f=>({...f,dueDate:d,status:f.status==="Overdue"&&d>=today()?"In Progress":f.status}));}} style={INPUT}/></div>
+              <div><label style={LBL}>Status</label><select value={tForm.status||"Pending"} onChange={e=>setTForm(f=>({...f,status:e.target.value}))} style={INPUT}>{TASK_STATUSES.map(s=><option key={s}>{s}</option>)}</select></div>
+            </div>
+          );
+        })()}
       </Modal>}
 
       {activityModal!==null&&<Modal title={activityModal==="add"?"Add Activity":"Edit Activity"} onClose={()=>setActivityModal(null)} onSave={saveActivity}>
